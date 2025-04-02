@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useContext } from 'react';
 import imageCompression from 'browser-image-compression';
 import Uppy from '@uppy/core';
 import { Dashboard } from '@uppy/react';
@@ -7,8 +7,12 @@ import '@uppy/core/dist/style.min.css';
 import '@uppy/dashboard/dist/style.min.css';
 import UploadButton from '../../components/uploadButton';
 import heic2any from 'heic2any';
+import { AppContext } from '../../contexts/AppContext';
+import { useNavigate } from 'react-router-dom';
 
 export function UploadPage() {
+  const { setNarratives } = useContext(AppContext);
+  const navigate = useNavigate();
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState('');
   const [compressingCount, setCompressingCount] = useState(0);
@@ -128,9 +132,20 @@ export function UploadPage() {
       }
     };
 
-    const completeHandler = (result: { successful?: Array<unknown>; failed?: Array<unknown> }) => {
+    const completeHandler = (result: { successful?: Array<unknown>; failed?: Array<unknown>; response?: { body?: any } }) => {
       if (result && result.successful && result.successful.length > 0) {
         setUploadStatus(`Upload complete! ${result.successful.length} files uploaded successfully.`);
+        
+        console.log(result);
+        // Update narratives with the server response
+        if (result.successful[0] && (result.successful[0] as any).response.body.results) {
+          setNarratives((result.successful[0] as any).response.body.results);
+          
+          // Redirect to the FilterPage after a short delay
+          setTimeout(() => {
+            navigate('/filter');
+          }, 1000);
+        }
       } else {
         setUploadStatus('Upload complete!');
       }
@@ -155,7 +170,7 @@ export function UploadPage() {
       // Cancel all uploads on unmount
       uppyInstance.cancelAll();
     };
-  }, [uppyInstance]);
+  }, [uppyInstance, setNarratives, navigate]);
 
   const resetUppy = useCallback(() => {
     uppyInstance.cancelAll();
