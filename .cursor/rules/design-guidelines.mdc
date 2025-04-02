@@ -1,0 +1,19 @@
+---
+description: make sure you follow SOLID principles
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+- Make sure you follow SOLID principles
+- Follow DRY principle- don't repeat yourself in code.
+- Immutability. Don't change state implicitly.
+- Especially single responsibility principle.
+- Try not to write functions longer than 15 lines, if they get longer seperate them into smaller functions.
+- Pay attention to encapsulation. 
+- Always try to minimize the amount of direct dependencies between different code structures.
+- don't use singleton. always prefer dependency inversion.
+- Don't talk too much abuot how you adhere to the principles, just adhere to them.
+
+- You can @ files here
+- You can use markdown but dont have to

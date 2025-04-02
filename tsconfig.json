@@ -2,5 +2,15 @@
   "extends": "./tsconfig.base.json",
   "compileOnSave": false,
   "files": [],
-  "references": []
+  "references": [
+    {
+      "path": "./apps/server-upload"
+    },
+    {
+      "path": "./apps/client-upload"
+    },
+    {
+      "path": "./apps/client-upload2"
+    }
+  ]
 }

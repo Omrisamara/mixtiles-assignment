@@ -1,0 +1,11 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+
+# Your rule content
+- Try to reuse types as much as you can. before you create a new type check if it (or part of it) already exists and if so, use it.
+
+- You can @ files here
+- You can use markdown but dont have to

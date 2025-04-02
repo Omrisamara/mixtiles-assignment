@@ -1,0 +1,14 @@
+---
+description: 
+globs: *.tsx *.ts
+alwaysApply: false
+---
+
+# Your rule content
+- on react components, put the props type in the component file, but for other new types, create them in another file {componentName.types.ts}
+- put page components under /src/pages
+- When creating new state, make sure to minimize the amount of data you save on the state, and do not have duplicate data on state, use referece id when needed.
+- when creating new state, think where is the ideal place for this state to sit, which other components might need to consume it? maybe it should sit on a global context instead.
+
+- You can @ files here
+- You can use markdown but dont have to

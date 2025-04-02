@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  server-upload:
+    build:
+      context: .
+      dockerfile: apps/server-upload/Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PYTHON_CLUSTER_SERVICE_URL=http://python-cluster:5000
+    depends_on:
+      - python-cluster
+    volumes:
+      - ./apps/server-upload:/app/apps/server-upload
+      - /app/node_modules
+
+  python-cluster:
+    build:
+      context: ./apps/server-upload/python-cluster
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./apps/server-upload/python-cluster:/app 

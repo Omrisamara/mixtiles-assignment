@@ -1,0 +1,13 @@
+---
+description: nx folder architecture
+globs: *.tsx *.ts
+alwaysApply: false
+---
+
+# Your rule content
+- creating new library should be on use the `nx g` command
+- user generated libraries sit on /libs folder
+- /libs/types library holds types that are relevant for the whole project (both server and clienet), for example, server response types. You should add types accordingly.
+
+- You can @ files here
+- You can use markdown but dont have to

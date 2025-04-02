@@ -1,0 +1,100 @@
+{
+  "name": "@mx/server-upload",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start:cluster": "cd python-cluster && python app.py",
+    "setup:cluster": "cd python-cluster && pip install -r requirements.txt",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "executor": "@nx/esbuild:esbuild",
+        "outputs": [
+          "{options.outputPath}"
+        ],
+        "defaultConfiguration": "production",
+        "options": {
+          "platform": "node",
+          "outputPath": "apps/server-upload/dist",
+          "format": [
+            "cjs"
+          ],
+          "bundle": false,
+          "main": "apps/server-upload/src/main.ts",
+          "tsConfig": "apps/server-upload/tsconfig.app.json",
+          "assets": [
+            "apps/server-upload/src/assets"
+          ],
+          "esbuildOptions": {
+            "sourcemap": true,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        },
+        "configurations": {
+          "development": {},
+          "production": {
+            "esbuildOptions": {
+              "sourcemap": false,
+              "outExtension": {
+                ".js": ".js"
+              }
+            }
+          }
+        }
+      },
+      "serve": {
+        "executor": "@nx/js:node",
+        "defaultConfiguration": "development",
+        "dependsOn": [
+          "build"
+        ],
+        "options": {
+          "buildTarget": "@mx/server-upload:build",
+          "runBuildTargetDependencies": false
+        },
+        "configurations": {
+          "development": {
+            "buildTarget": "@mx/server-upload:build:development"
+          },
+          "production": {
+            "buildTarget": "@mx/server-upload:build:production"
+          }
+        }
+      },
+      "watch": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "ts-node-dev --respawn --transpile-only apps/server-upload/src/main.ts",
+          "cwd": ".",
+          "parallel": false
+        }
+      },
+      "run-cluster": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "python python-cluster/app.py",
+          "cwd": "apps/server-upload"
+        }
+      },
+      "setup-cluster": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "cd python-cluster && pip install --user cython>=0.29.24 && pip install --user -r requirements.txt --no-binary=hdbscan",
+          "cwd": "apps/server-upload"
+        }
+      },
+      "docker-run-python": {
+        "executor": "nx:run-commands",
+        "options": {  
+          "command": "docker build -t python-server ./python-cluster -f ./python-cluster/Dockerfile && docker run -p 5000:5000 python-server",
+          "cwd": "apps/server-upload"
+        }
+      }
+    }
+  }
+}
