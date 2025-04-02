@@ -1,61 +1,59 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { AppContext } from '../../../contexts/AppContext';
-import ImageCardStack from './components/imageCardStack';
+import ClusterCard from './components/ClusterCard';
+import ViewModeToggle from './components/ViewModeToggle';
 
 export function FilterPage() {
   const { narratives } = useContext(AppContext);
+  const [viewMode, setViewMode] = useState<'grid' | 'stack'>('grid');
   
   // Count total images
   const totalImages = narratives.reduce((total, narrative) => total + narrative.photos.length, 0);
   
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Filter Page</h1>
-      
-      <div className="mb-4">
-        <p className="text-lg font-semibold">Total clusters: {narratives.length}</p>
-        <p className="text-lg font-semibold">Total images: {totalImages}</p>
+    <div className="container mx-auto px-4 py-6">
+      <div className="mb-8">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+          <h1 className="text-3xl font-bold">Your Photos</h1>
+          
+          <div className="flex flex-col sm:flex-row gap-4 mt-4 md:mt-0">
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                {narratives.length} {narratives.length === 1 ? 'cluster' : 'clusters'}
+              </span>
+              <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                {totalImages} {totalImages === 1 ? 'image' : 'images'}
+              </span>
+            </div>
+            
+            {narratives.length > 0 && (
+              <ViewModeToggle viewMode={viewMode} onChange={setViewMode} />
+            )}
+          </div>
+        </div>
+        
+        {/* Divider line */}
+        <div className="border-b border-gray-200"></div>
       </div>
       
       {narratives.length === 0 ? (
-        <p className="mb-4">No images uploaded yet. Go to the upload page first.</p>
+        <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="mb-4">
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900">No images uploaded yet</h3>
+          <p className="mt-1 text-sm text-gray-500">Go to the upload page to add some photos.</p>
+        </div>
       ) : (
-        <div>
-          {/* Image Card Stacks for each narrative */}
-          {narratives.map((narrative) => {
-            // Prepare data for ImageCardStack
-            const narrativeImages = narrative.photos.map(photo => ({
-              id: photo.filename,
-              url: photo.url
-            }));
-            
-            return narrativeImages.length > 0 ? (
-              <div key={`stack-${narrative.clusterId}`} className="mb-8">
-                <h2 className="text-xl font-bold mb-4 text-center">{narrative.label}</h2>
-                <div className="h-96">
-                  <ImageCardStack images={narrativeImages} />
-                </div>
-              </div>
-            ) : null;
-          })}
-          
-          {/* Existing photo grid */}
+        <div className="space-y-6">
           {narratives.map((cluster) => (
-            <div key={cluster.clusterId} className="mb-8 border p-4 rounded">
-              <h2 className="text-xl font-bold mb-2">Cluster: {cluster.label}</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {cluster.photos.map((photo, index) => (
-                  <div key={index} className="border p-2 rounded">
-                    <img 
-                      src={photo.url} 
-                      alt={photo.filename} 
-                      className="w-full h-40 object-cover mb-2" 
-                    />
-                    <p className="text-sm truncate">{photo.filename}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <ClusterCard
+              key={cluster.clusterId}
+              cluster={cluster}
+              viewMode={viewMode}
+            />
           ))}
         </div>
       )}
