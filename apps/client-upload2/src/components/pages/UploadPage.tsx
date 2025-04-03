@@ -149,9 +149,7 @@ export function UploadPage() {
           setNarratives((result.successful[0] as any).response.body.results);
           
           // Redirect to the FilterPage after a short delay
-          setTimeout(() => {
-            navigate('/filter');
-          }, 1000);
+          navigate('/filter');
         }
       } else {
         setUploadStatus('Upload complete!');
@@ -336,6 +334,10 @@ export function UploadPage() {
               <h3 className="text-xl font-bold text-gray-800 mb-3">
                 {compressingCount > 0 ? "Processing Images" : "Uploading Images"}
               </h3>
+              {/* TODO: remove before production */}
+              <p className="text-gray-600 text-center mb-2">
+                {uploadStatus}
+              </p>
               <p className="text-gray-600 text-center mb-2">
                 {compressingCount > 0 
                   ? "Converting and optimizing your photos for the best experience." 

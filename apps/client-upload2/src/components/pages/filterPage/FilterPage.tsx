@@ -40,28 +40,28 @@ export function FilterPage() {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="mb-8">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-3">
-          <h1 className="text-3xl font-bold">Choose your photos</h1>
-          <h3 className="text-lg font-medium text-gray-900">Swipe to remove the photos you don't want to include in your album.</h3>
-          
-          <div className="flex flex-col sm:flex-row gap-4 mt-4 md:mt-0">
-            <div className="flex items-center gap-2">
-              <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                {narratives.length} {narratives.length === 1 ? 'cluster' : 'clusters'}
-              </span>
-              <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                {totalImages} {totalImages === 1 ? 'image' : 'images'}
-              </span>
-            </div>
-            
-            {narratives.length > 0 && (
-              <ViewModeToggle viewMode={viewMode} onChange={setViewMode} />
-            )}
+        <div className="flex flex-col space-y-3 mb-4">
+          <h1 className="text-3xl font-bold text-gray-900">Choose your photos</h1>
+          <p className="text-lg text-gray-600">Swipe or click to remove the photos you don't want to include in your album.</p>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+          <div className="flex items-center gap-2 mb-3 sm:mb-0">
+            <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+              {narratives.length} {narratives.length === 1 ? 'cluster' : 'clusters'}
+            </span>
+            <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+              {totalImages} {totalImages === 1 ? 'image' : 'images'}
+            </span>
           </div>
+          
+          {narratives.length > 0 && (
+            <ViewModeToggle viewMode={viewMode} onChange={setViewMode} />
+          )}
         </div>
         
         {/* Divider line */}
-        <div className="border-b border-gray-200"></div>
+        <div className="border-b border-gray-200 mt-4"></div>
       </div>
       
       {narratives.length === 0 ? (
@@ -75,7 +75,7 @@ export function FilterPage() {
           <p className="mt-1 text-sm text-gray-500">Go to the upload page to add some photos.</p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-6 mb-20">
           {narratives.map((cluster) => (
             <ClusterCard
               key={cluster.clusterId}
@@ -88,10 +88,10 @@ export function FilterPage() {
         </div>
       )}
       
-      <div className="mt-8">
+      <div className="fixed bottom-0 left-0 right-0 p-4 z-10">
         <button
           onClick={handleNavigateToNarratives}
-          className="w-full px-6 py-4 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors flex items-center justify-center"
+          className="w-full px-6 py-4 backdrop-blur-md bg-blue-600/90 border border-blue-500/40 shadow-lg text-white rounded-xl font-medium hover:bg-blue-700/90 transition-colors flex items-center justify-center"
         >
           <span>Explore your narratives</span>
           <svg 
