@@ -8,7 +8,7 @@ interface ClusterCardProps {
   cluster: ClusterData;
   viewMode: 'grid' | 'stack';
   onSwipe?: (photoId: string) => void;
-  onRemoveCluster?: (clusterId: number) => void;
+  onRemoveCluster?: (clusterId: string) => void;
 }
 
 interface SwipeableImageProps {

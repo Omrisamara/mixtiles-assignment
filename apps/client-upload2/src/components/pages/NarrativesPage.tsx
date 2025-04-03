@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { AppContext } from '../../contexts/AppContext';
 import { useNavigate } from 'react-router-dom';
+import BackButton from '../common/BackButton';
 
 interface NarrativeCardProps {
   label: string;
@@ -44,6 +45,7 @@ export function NarrativesPage() {
 
   return (
     <div className="container mx-auto p-4">
+      <BackButton label="Back to Filter" />
       <h1 className="text-3xl font-bold mb-6">Narratives</h1>
       
       {narratives.length === 0 ? (

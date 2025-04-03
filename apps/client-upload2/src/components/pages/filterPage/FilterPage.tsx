@@ -3,6 +3,7 @@ import { AppContext } from '../../../contexts/AppContext';
 import ClusterCard from './components/ClusterCard';
 import ViewModeToggle from './components/ViewModeToggle';
 import { useNavigate } from 'react-router-dom';
+import BackButton from '../../common/BackButton';
 
 export function FilterPage() {
   const { narratives, setNarratives } = useContext(AppContext);
@@ -12,7 +13,7 @@ export function FilterPage() {
   // Count total images
   const totalImages = narratives.reduce((total, narrative) => total + narrative.photos.length, 0);
   
-  const handleSwipe = (photoId: string, clusterId: number) => {
+  const handleSwipe = (photoId: string, clusterId: string) => {
     const updatedNarratives = narratives.map(narrative => {
       if (narrative.clusterId === clusterId) {
         return {
@@ -26,7 +27,7 @@ export function FilterPage() {
     setNarratives(updatedNarratives);
   };
 
-  const handleRemoveNarrative = (clusterId: number) => {
+  const handleRemoveNarrative = (clusterId: string) => {
     const updatedNarratives = narratives.filter(narrative => 
       narrative.clusterId !== clusterId
     );
@@ -39,6 +40,7 @@ export function FilterPage() {
 
   return (
     <div className="container mx-auto px-4 py-6">
+      <BackButton label="Back to Upload" />
       <div className="mb-8">
         <div className="flex flex-col space-y-3 mb-4">
           <h1 className="text-3xl font-bold text-gray-900">Choose your photos</h1>
@@ -82,7 +84,7 @@ export function FilterPage() {
               cluster={cluster}
               viewMode={viewMode}
               onSwipe={(photoId) => handleSwipe(photoId, cluster.clusterId)}
-              onRemoveCluster={handleRemoveNarrative}
+              onRemoveCluster={() => handleRemoveNarrative(cluster.clusterId)}
             />
           ))}
         </div>
