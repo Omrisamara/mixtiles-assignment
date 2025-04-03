@@ -1,15 +1,19 @@
 import React, { useContext } from 'react';
 import { AppContext } from '../../contexts/AppContext';
+import { useNavigate } from 'react-router-dom';
 
 interface NarrativeCardProps {
   label: string;
   backgroundUrl: string;
+  clusterId: number;
+  onClick: (id: number) => void;
 }
 
-const NarrativeCard: React.FC<NarrativeCardProps> = ({ label, backgroundUrl }) => {
+const NarrativeCard: React.FC<NarrativeCardProps> = ({ label, backgroundUrl, clusterId, onClick }) => {
   return (
     <div 
       className="relative h-64 rounded-lg overflow-hidden shadow-lg cursor-pointer transform transition-all hover:scale-105"
+      onClick={() => onClick(clusterId)}
     >
       <div 
         className="absolute inset-0 bg-cover bg-center" 
@@ -25,12 +29,17 @@ const NarrativeCard: React.FC<NarrativeCardProps> = ({ label, backgroundUrl }) =
 
 export function NarrativesPage() {
   const { narratives } = useContext(AppContext);
+  const navigate = useNavigate();
 
   // Function to get a random image URL from the narrative's photos
   const getRandomImageUrl = (photos: any[]) => {
     if (!photos || photos.length === 0) return '';
     const randomIndex = Math.floor(Math.random() * photos.length);
     return photos[randomIndex].url;
+  };
+
+  const handleNarrativeClick = (clusterId: number) => {
+    navigate(`/narratives/${clusterId}`);
   };
 
   return (
@@ -46,6 +55,8 @@ export function NarrativesPage() {
               key={narrative.clusterId}
               label={narrative.label.replace(/['"]/g, '')}
               backgroundUrl={getRandomImageUrl(narrative.photos)}
+              clusterId={narrative.clusterId}
+              onClick={handleNarrativeClick}
             />
           ))}
         </div>

@@ -1,9 +1,10 @@
 import React from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
-import UploadPage from '../pages/UploadPage';
-import FilterPage from '../pages/filterPage/FilterPage';
-import NarrativesPage from '../pages/NarrativesPage';
-import { AppProvider } from '../../contexts/AppContext';
+import UploadPage from '../components/pages/UploadPage';
+import FilterPage from '../components/pages/filterPage/FilterPage';
+import NarrativesPage from '../components/pages/NarrativesPage';
+import ExploreNarrativePage from '../components/pages/ExploreNarrativePage';
+import { AppProvider } from '../contexts/AppContext';
 
 export function App() {
   return (
@@ -21,6 +22,7 @@ export function App() {
           <Route path="/" element={<UploadPage />} />
           <Route path="/filter" element={<FilterPage />} />
           <Route path="/narratives" element={<NarrativesPage />} />
+          <Route path="/narratives/:narrativeId" element={<ExploreNarrativePage />} />
         </Routes>
       </div>
     </AppProvider>

@@ -3,6 +3,7 @@ import { Routes, Route, Link } from 'react-router-dom';
 import UploadPage from '../pages/UploadPage';
 import FilterPage from '../pages/filterPage/FilterPage';
 import NarrativesPage from '../pages/NarrativesPage';
+import ExploreNarrativePage from '../pages/ExploreNarrativePage';
 import { AppProvider } from '../../contexts/AppContext';
 
 export function App() {
@@ -21,6 +22,7 @@ export function App() {
           <Route path="/" element={<UploadPage />} />
           <Route path="/filter" element={<FilterPage />} />
           <Route path="/narratives" element={<NarrativesPage />} />
+          <Route path="/narratives/:narrativeId" element={<ExploreNarrativePage />} />
         </Routes>
       </div>
     </AppProvider>
