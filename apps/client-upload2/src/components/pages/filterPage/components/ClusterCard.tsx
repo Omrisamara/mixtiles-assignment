@@ -192,7 +192,7 @@ const ClusterCard: React.FC<ClusterCardProps> = ({ cluster, viewMode, onSwipe, o
       <div className="relative">
         {activeDeletePhotoId && (
           <div 
-            className="fixed inset-0 bg-black bg-opacity-50 z-30"
+            className="fixed inset-0 bg-black bg-opacity-50 z-30 backdrop-blur-sm"
             onClick={handleOverlayClick}
             aria-hidden="true"
           />
