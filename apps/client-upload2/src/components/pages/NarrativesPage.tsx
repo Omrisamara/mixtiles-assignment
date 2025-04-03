@@ -5,8 +5,8 @@ import { useNavigate } from 'react-router-dom';
 interface NarrativeCardProps {
   label: string;
   backgroundUrl: string;
-  clusterId: number;
-  onClick: (id: number) => void;
+  clusterId: string;
+  onClick: (id: string) => void;
 }
 
 const NarrativeCard: React.FC<NarrativeCardProps> = ({ label, backgroundUrl, clusterId, onClick }) => {
@@ -38,7 +38,7 @@ export function NarrativesPage() {
     return photos[randomIndex].url;
   };
 
-  const handleNarrativeClick = (clusterId: number) => {
+  const handleNarrativeClick = (clusterId: string) => {
     navigate(`/narratives/${clusterId}`);
   };
 

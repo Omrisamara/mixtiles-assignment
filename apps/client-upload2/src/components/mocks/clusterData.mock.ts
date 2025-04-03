@@ -1,6 +1,6 @@
 export const clusterDataMock = [
     {
-        "clusterId": 0,
+        "clusterId": "0",
         "label": "\"Flame and Fire Themes\"",
         "photos": [
             {
@@ -46,7 +46,7 @@ export const clusterDataMock = [
         ]
     },
     {
-        "clusterId": 1,
+        "clusterId": "1",
         "label": "Graphic Design and Logos",
         "photos": [
             {
