@@ -8,8 +8,8 @@ interface ViewModeToggleProps {
 
 const ViewModeToggle: React.FC<ViewModeToggleProps> = ({ viewMode, onChange }) => {
   return (
-    <div className="flex items-center justify-end mb-4 space-x-2">
-      <span className="text-sm font-medium text-gray-700">View mode:</span>
+    <div className="flex items-center justify-end mt-4 space-x-2">
+      {/* <span className="text-sm font-medium text-gray-700">View mode:</span> */}
       <div className="flex border rounded-lg overflow-hidden">
         <button
           className={`flex items-center px-3 py-2 ${

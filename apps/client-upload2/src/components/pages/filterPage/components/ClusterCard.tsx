@@ -8,6 +8,7 @@ interface ClusterCardProps {
   cluster: ClusterData;
   viewMode: 'grid' | 'stack';
   onSwipe?: (photoId: string) => void;
+  onRemoveCluster?: (clusterId: number) => void;
 }
 
 interface SwipeableImageProps {
@@ -127,7 +128,7 @@ const SwipeableImage: React.FC<SwipeableImageProps> = memo(({
 
 SwipeableImage.displayName = 'SwipeableImage';
 
-const ClusterCard: React.FC<ClusterCardProps> = ({ cluster, viewMode, onSwipe }) => {
+const ClusterCard: React.FC<ClusterCardProps> = ({ cluster, viewMode, onSwipe, onRemoveCluster }) => {
   const [swipingPhotoId, setSwipingPhotoId] = useState<string | null>(null);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [activeDeletePhotoId, setActiveDeletePhotoId] = useState<string | null>(null);
@@ -143,6 +144,12 @@ const ClusterCard: React.FC<ClusterCardProps> = ({ cluster, viewMode, onSwipe })
       onSwipe(photoId);
     }
   }, [onSwipe]);
+
+  const handleRemoveCluster = useCallback(() => {
+    if (onRemoveCluster) {
+      onRemoveCluster(cluster.clusterId);
+    }
+  }, [onRemoveCluster, cluster.clusterId]);
 
   const handleSwiping = useCallback((e: SwipeEventData, photoId: string) => {
     if (e.dir === 'Left' || e.dir === 'Right') {
@@ -177,7 +184,8 @@ const ClusterCard: React.FC<ClusterCardProps> = ({ cluster, viewMode, onSwipe })
       <div className="py-4 bg-white">
         <ClusterHeader 
           label={cluster.label} 
-          photoCount={cluster.photos.length} 
+          photoCount={cluster.photos.length}
+          onRemoveCluster={onRemoveCluster ? handleRemoveCluster : undefined}
         />
       </div>
 

@@ -24,10 +24,17 @@ export function FilterPage() {
     setNarratives(updatedNarratives);
   };
 
+  const handleRemoveNarrative = (clusterId: number) => {
+    const updatedNarratives = narratives.filter(narrative => 
+      narrative.clusterId !== clusterId
+    );
+    setNarratives(updatedNarratives);
+  };
+
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="mb-8">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-3">
           <h1 className="text-3xl font-bold">Choose your photos</h1>
           <h3 className="text-lg font-medium text-gray-900">Swipe to remove the photos you don't want to include in your album.</h3>
           
@@ -69,6 +76,7 @@ export function FilterPage() {
               cluster={cluster}
               viewMode={viewMode}
               onSwipe={(photoId) => handleSwipe(photoId, cluster.clusterId)}
+              onRemoveCluster={handleRemoveNarrative}
             />
           ))}
         </div>

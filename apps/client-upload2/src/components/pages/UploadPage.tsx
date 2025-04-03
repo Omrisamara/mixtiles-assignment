@@ -184,7 +184,20 @@ export function UploadPage() {
   }, [uppyInstance]);
 
   const handleFilesSelected = (files: File[]) => {
-    console.log(files);
+    // Add each selected file to the Uppy instance
+    files.forEach(file => {
+      try {
+        uppyInstance.addFile({
+          name: file.name,
+          type: file.type,
+          data: file,
+          source: 'local',
+          isRemote: false,
+        });
+      } catch (error) {
+        console.error('Error adding file to Uppy:', error);
+      }
+    });
   };
 
   return (
@@ -192,7 +205,9 @@ export function UploadPage() {
       <h1 className="text-3xl font-bold mb-6">Upload your photos</h1>
       <p className="mb-4">Choose photos from your gallery to include in your album experience.</p>
 
-      <UploadButton onFilesSelected={handleFilesSelected} />
+      <div className="mb-4">
+        <UploadButton onFilesSelected={handleFilesSelected} />
+      </div>
       
       {compressingCount > 0 && (
         <div className="mb-4 p-2 bg-yellow-100 border border-yellow-300 rounded">
