@@ -176,11 +176,11 @@ export class OpenaiApi {
             messages: [
               {
                 role: "system",
-                content: "You are a helpful assistant that creates short, descriptive labels for image clusters."
+                content: "You are a helpful assistant that creates short, descriptive labels for image narratives (like google photos albums)."
               },
               {
                 role: "user",
-                content: `Based on the following image descriptions, create a concise label (maximum 4 words) that best describes this group of images:\n\n${descriptionsText}`
+                content: `Based on the following image descriptions, create a concise label (important: maximum 4 words) that best describes this group of images:\n\n${descriptionsText}`
               }
             ],
             max_tokens: 20,

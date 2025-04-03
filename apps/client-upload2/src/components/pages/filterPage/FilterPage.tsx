@@ -4,17 +4,32 @@ import ClusterCard from './components/ClusterCard';
 import ViewModeToggle from './components/ViewModeToggle';
 
 export function FilterPage() {
-  const { narratives } = useContext(AppContext);
+  const { narratives, setNarratives } = useContext(AppContext);
   const [viewMode, setViewMode] = useState<'grid' | 'stack'>('grid');
   
   // Count total images
   const totalImages = narratives.reduce((total, narrative) => total + narrative.photos.length, 0);
   
+  const handleSwipe = (photoId: string, clusterId: number) => {
+    const updatedNarratives = narratives.map(narrative => {
+      if (narrative.clusterId === clusterId) {
+        return {
+          ...narrative,
+          photos: narrative.photos.filter(photo => photo.filename !== photoId)
+        };
+      }
+      return narrative;
+    });
+    
+    setNarratives(updatedNarratives);
+  };
+
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="mb-8">
         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
-          <h1 className="text-3xl font-bold">Your Photos</h1>
+          <h1 className="text-3xl font-bold">Choose your photos</h1>
+          <h3 className="text-lg font-medium text-gray-900">Swipe to remove the photos you don't want to include in your album.</h3>
           
           <div className="flex flex-col sm:flex-row gap-4 mt-4 md:mt-0">
             <div className="flex items-center gap-2">
@@ -53,6 +68,7 @@ export function FilterPage() {
               key={cluster.clusterId}
               cluster={cluster}
               viewMode={viewMode}
+              onSwipe={(photoId) => handleSwipe(photoId, cluster.clusterId)}
             />
           ))}
         </div>

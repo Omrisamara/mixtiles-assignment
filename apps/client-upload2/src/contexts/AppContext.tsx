@@ -2,17 +2,15 @@ import React, { createContext, useState, ReactNode } from 'react';
 import { clusterDataMock } from '../components/mocks/clusterData.mock';
 
 export type ClusterData = {
-    clusterId: string;
+    clusterId: number;
     label: string;
-    photos: [
-      {
+    photos: {
         filename: string;
         url: string;
         takenTime?: Date;
         location?: { lat: number; lng: number };
         description: string;
-      }
-    ];
+      }[];
 }
 
 interface AppContextType {

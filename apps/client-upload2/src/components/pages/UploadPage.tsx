@@ -189,8 +189,8 @@ export function UploadPage() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Mass Image Uploader</h1>
-      <p className="mb-4">Upload up to 1000 images. Images will be compressed before upload.</p>
+      <h1 className="text-3xl font-bold mb-6">Upload your photos</h1>
+      <p className="mb-4">Choose photos from your gallery to include in your album experience.</p>
 
       <UploadButton onFilesSelected={handleFilesSelected} />
       
