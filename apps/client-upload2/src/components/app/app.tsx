@@ -12,9 +12,9 @@ export function App() {
       <div>
         <nav className="bg-gray-100 p-4">
           <ul className="flex space-x-4">
-            <li><Link to="/" className="text-blue-600 hover:underline">Upload</Link></li>
-            <li><Link to="/filter" className="text-blue-600 hover:underline">Filter</Link></li>
-            <li><Link to="/narratives" className="text-blue-600 hover:underline">Narratives</Link></li>
+            <li><Link to="/" className="text-gray-600 hover:underline">Upload</Link></li>
+            <li><Link to="/filter" className="text-gray-600 hover:underline">Filter</Link></li>
+            <li><Link to="/narratives" className="text-gray-600 hover:underline">Narratives</Link></li>
           </ul>
         </nav>
         

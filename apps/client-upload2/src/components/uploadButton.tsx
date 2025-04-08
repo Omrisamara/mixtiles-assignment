@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { Upload } from 'lucide-react';
 
 const UploadButton = ({
   onFilesSelected,
@@ -34,12 +35,16 @@ const UploadButton = ({
           padding: '12px 24px',
           fontSize: '16px',
           borderRadius: '8px',
-          backgroundColor: '#007aff',
+          backgroundColor: '#4F46E5',
           color: 'white',
           border: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
         }}
       >
-        📷 Select Photos
+        <Upload size={20} />
+        Select Photos
       </button>
     </div>
   );

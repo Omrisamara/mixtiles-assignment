@@ -19,9 +19,29 @@ export class GoogleVisionApi {
       // Split files into batches
       const batches = this.splitIntoBatches(files, this.batchSize);
       
-      // Process each batch in parallel
-      const batchPromises = batches.map(batch => this.processBatch(batch));
-      const batchResults = await Promise.all(batchPromises);
+      // Dynamically import PQueue
+      const { default: PQueue } = await import('p-queue');
+      
+      // Create queue with rate limiting (2 requests per second)
+      const queue = new PQueue({
+        interval: 500, // 1 second
+        intervalCap: 5, // 2 tasks per interval
+        concurrency: 1  // Process 2 tasks at a time
+      });
+      
+      // Add all batches to the queue and collect promises
+      const promises: Promise<ImageVisionDescription[]>[] = [];
+      
+      for (const batch of batches) {
+        const promise = queue.add(async () => {
+          const result = await this.processBatch(batch);
+          return result;
+        });
+        promises.push(promise as Promise<ImageVisionDescription[]>);
+      }
+      
+      // Wait for all batches to complete
+      const batchResults = await Promise.all(promises);
       
       // Flatten results
       return batchResults.flat();
@@ -65,9 +85,10 @@ export class GoogleVisionApi {
       
       // Execute request with exponential backoff retry
       const batchResult = await retry(processWithRetry, {
-        retries: 3,
+        retries: 1,
         onFailedAttempt: (error: Error) => {
           console.warn(`Batch processing attempt failed. ${error.message}. Retrying...`);
+          console.log(error)
         },
         minTimeout: 10000, // Start with 1 second delay
         factor: 1 // Exponential factor for backoff

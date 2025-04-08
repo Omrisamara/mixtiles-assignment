@@ -4,6 +4,7 @@ import numpy as np
 import umap
 import hdbscan
 import logging
+from sklearn.metrics.pairwise import cosine_similarity
 
 app = Flask(__name__)
 CORS(app)
@@ -43,6 +44,48 @@ def get_outlier_file_ids(cluster_labels, file_indices):
     outlier_indices = np.where(cluster_labels == -1)[0]
     return [str(file_indices[i]) for i in outlier_indices]
 
+def find_duplicate_embeddings(embeddings, file_indices, similarity_threshold=0.80):
+    """
+    Finds near-duplicate embeddings based on cosine similarity.
+    
+    Args:
+        embeddings: Array of embeddings
+        file_indices: List of file identifiers
+        similarity_threshold: Threshold above which embeddings are considered duplicates
+        
+    Returns:
+        tuple: (filtered_embeddings, filtered_indices, removed_duplicates)
+        where removed_duplicates is a list of file IDs that were removed as duplicates
+    """
+    similarities = cosine_similarity(embeddings)
+    np.fill_diagonal(similarities, 0)  # Ignore self-similarities
+    
+    # Keep track of which embeddings to remove
+    to_remove = set()
+    removed_duplicates = []
+    
+    for i in range(len(similarities)):
+        if i in to_remove:
+            continue
+            
+        # Find indices of highly similar embeddings
+        similar_indices = np.where(similarities[i] > similarity_threshold)[0]
+        
+        # Add all similar embeddings to removed list (except the first one)
+        for idx in similar_indices:
+            if idx not in to_remove:
+                to_remove.add(idx)
+                removed_duplicates.append(str(file_indices[idx]))
+    
+    # Create mask for keeping embeddings
+    keep_mask = np.ones(len(embeddings), dtype=bool)
+    keep_mask[list(to_remove)] = False
+    
+    filtered_embeddings = embeddings[keep_mask]
+    filtered_indices = [idx for i, idx in enumerate(file_indices) if keep_mask[i]]
+    
+    return filtered_embeddings, filtered_indices, removed_duplicates
+
 @app.route('/cluster', methods=['POST'])
 def cluster_images():
     try:
@@ -53,16 +96,23 @@ def cluster_images():
         embeddings = np.array([emb['vector'] for emb in data['embeddings']])
         file_indices = [emb.get('filename', str(i)) for i, emb in enumerate(data['embeddings'])]
         
-        # Apply UMAP for dimensionality reduction
+        # Find and remove duplicates first
+        filtered_embeddings, filtered_indices, removed_duplicates = find_duplicate_embeddings(
+            embeddings, file_indices
+        )
+        
+        logger.info(f"Found {len(removed_duplicates)} duplicate embeddings")
+        
+        # Apply UMAP for dimensionality reduction on filtered embeddings
         umap_reducer = umap.UMAP(
             n_neighbors=15, 
             n_components=5,
             min_dist=0.1,
             metric='cosine'
         )
-        embedding_reduced = umap_reducer.fit_transform(embeddings)
+        embedding_reduced = umap_reducer.fit_transform(filtered_embeddings)
         
-        # Apply HDBSCAN for clustering
+        # Apply HDBSCAN for clustering on reduced embeddings
         clusterer = hdbscan.HDBSCAN(
             min_cluster_size=5,
             min_samples=2,
@@ -71,10 +121,11 @@ def cluster_images():
         )
         cluster_labels = clusterer.fit_predict(embedding_reduced)
         
-        # Format results with only fileClusterMapping and file ID-based outliers
+        # Format results
         result = {
-            "fileClusterMapping": format_cluster_results(cluster_labels, file_indices),
-            "outliers": get_outlier_file_ids(cluster_labels, file_indices)
+            "fileClusterMapping": format_cluster_results(cluster_labels, filtered_indices),
+            "outliers": get_outlier_file_ids(cluster_labels, filtered_indices),
+            "duplicates": removed_duplicates
         }
         
         logger.info(f"Clustering complete: found {len(set(cluster_labels)) - (1 if -1 in cluster_labels else 0)} clusters")

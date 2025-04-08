@@ -9,6 +9,7 @@ export interface FileClusterMapping {
 export interface ClusteringResult {
   fileClusterMapping: FileClusterMapping[];
   outliers: string[];
+  duplicates: string[];
 }
 
 export class ClusterApi {

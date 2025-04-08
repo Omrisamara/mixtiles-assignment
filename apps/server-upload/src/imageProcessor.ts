@@ -5,6 +5,8 @@ import { ClusterApi } from './services/clusterApi';
 import { ClusterProcessor } from './services/clusterProcessor';
 import { GoogleCloudStorage } from './services/googleCloudStorage';
 
+export type FileClusterMapping = { [filename: string]: string };
+
 export type ClusterData = {
     clusterId: string;
     label: string;
@@ -36,15 +38,10 @@ export class ImageProcessor {
 
   
   async processImages(files: Express.Multer.File[]): Promise<ClusterData[]> {
-    // INSTRUCTIONS:
-    // Implement the functions.
-    // For each of these calls, when you implement them, take into consideration that some api call might fail the should should inruduce some kind of retry machenism.
-    // Use the following types for the return values of the functions, remove the types later when you add the implementation because the types will be inferred.
-
     console.time('getDescriptions');
     const imagesVisionDescriptions = await this.googleVisionApi.getDescriptions(files);
     console.timeEnd('getDescriptions');
-
+    
     console.time('getEmbddings');
     const descriptionsEmbddings = await this.openaiApi.getEmbddings(imagesVisionDescriptions);
     console.timeEnd('getEmbddings');
@@ -68,17 +65,37 @@ export class ImageProcessor {
     );
     console.timeEnd('createClusterNames');
 
-    const nonOutliersFiles = files.filter(file => !clusteredDescriptions.outliers.includes(file.filename));
+    const relevantClusters = await this.openaiApi.getRelevantClusters(clusterLabelsMap);
+    console.log('relevantClusters', relevantClusters);
+
+    // Filter out files that are either outliers or not in relevant clusters
+    const relevantFiles = files.filter(file => {
+      // Find which cluster this file belongs to
+      const fileMapping = clusteredDescriptions.fileClusterMapping.find(
+        mapping => mapping.fileId === file.originalname
+      );
+      
+      const isOutlier = clusteredDescriptions.outliers.includes(file.filename);
+      const isDuplicate = clusteredDescriptions.duplicates.includes(file.filename);
+      const isInRelevantCluster = fileMapping && relevantClusters.includes(fileMapping.cluster);
+      
+      return !isOutlier && isInRelevantCluster;
+    });
     
     console.time('saveImages');
-    const fileNameToUrlMap = await this.googleCloudStorage.saveImages(nonOutliersFiles);
+    const fileNameToUrlMap = await this.googleCloudStorage.saveImages(relevantFiles);
     console.timeEnd('saveImages');
 
-    require('fs').writeFileSync('./debug-files.json', JSON.stringify(files, null, 2));
+    // require('fs').writeFileSync('./debug-files.json', JSON.stringify(files, null, 2));
 
     console.time('createFullClustersData');
+    // Filter cluster mappings to only include files from relevant clusters
+    const relevantClusterMappings = clusteredDescriptions.fileClusterMapping.filter(
+      mapping => relevantClusters.includes(mapping.cluster)
+    );
+
     const clustersData = this.clusterProcessor.createFullClustersData(
-      clusteredDescriptions.fileClusterMapping,
+      relevantClusterMappings,
       clusterLabelsMap,
       fileNameToUrlMap,
       imagesTakenTime,

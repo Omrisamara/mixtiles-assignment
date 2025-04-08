@@ -9,7 +9,8 @@ import UploadButton from '../../components/uploadButton';
 import heic2any from 'heic2any';
 import { AppContext } from '../../contexts/AppContext';
 import { useNavigate } from 'react-router-dom';
-
+import pLimit from 'p-limit';
+import Compressor from '@uppy/compressor';
 export function UploadPage() {
   const { setNarratives } = useContext(AppContext);
   const navigate = useNavigate();
@@ -32,6 +33,8 @@ export function UploadPage() {
       },
     });
 
+    uppy.use(Compressor);
+
     // Use XHRUpload for uploading files
     uppy.use(XHRUpload, {
       endpoint: 'http://192.168.1.73:4000/api/upload', // Replace with your server endpoint
@@ -44,77 +47,83 @@ export function UploadPage() {
     });
 
     // Add a preprocessor for image conversion and compression
-    uppy.addPreProcessor(async (fileIDs) => {
-      for (const fileID of fileIDs) {
-        const file = uppy.getFile(fileID);
+    // uppy.addPreProcessor(async (fileIDs) => {
+    //   const limit = pLimit(4); // Limit concurrent operations to 4
+      
+    //   // Create an array of promises for parallel processing
+    //   const processingPromises = fileIDs.map(fileID => limit(async () => {
+    //     const file = uppy.getFile(fileID);
         
-        // Handle HEIC conversion first
-        if (file && (file.type === 'image/heic' || file.type === 'image/heif' || file.name?.toLowerCase().endsWith('.heic'))) {
-          try {
-            setCompressingCount(prev => prev + 1);
-            setUploadStatus(`Converting HEIC image ${file.name?.toString() || 'unknown'} to JPEG...`);
+    //     // Handle HEIC conversion first
+    //     if (file && (file.type === 'image/heic' || file.type === 'image/heif' || file.name?.toLowerCase().endsWith('.heic'))) {
+    //       try {
+    //         setCompressingCount(prev => prev + 1);
+    //         setUploadStatus(`Converting HEIC image ${file.name?.toString() || 'unknown'} to JPEG...`);
             
-            // Cast to File to ensure compatibility
-            const fileData = file.data as File;
+    //         // Cast to File to ensure compatibility
+    //         const fileData = file.data as File;
             
-            // Convert HEIC to JPEG
-            const jpegBlob = await heic2any({
-              blob: fileData,
-              toType: 'image/jpeg',
-              quality: 0.5
-            }) as Blob;
+    //         // Convert HEIC to JPEG
+    //         const jpegBlob = await heic2any({
+    //           blob: fileData,
+    //           toType: 'image/jpeg',
+    //           quality: 0.5
+    //         }) as Blob;
             
-            // Create a new file with JPEG extension
-            const newFileName = file.name?.replace(/\.[^/.]+$/, '') + '.jpg';
-            const jpegFile = new File([jpegBlob], newFileName, { type: 'image/jpeg' });
+    //         // Create a new file with JPEG extension
+    //         const newFileName = file.name?.replace(/\.[^/.]+$/, '') + '.jpg';
+    //         const jpegFile = new File([jpegBlob], newFileName, { type: 'image/jpeg' });
             
-            // Update the file with converted data
-            uppy.setFileState(fileID, {
-              data: jpegFile,
-              name: newFileName,
-              type: jpegFile.type,
-              size: jpegFile.size,
-            });
+    //         // Update the file with converted data
+    //         uppy.setFileState(fileID, {
+    //           data: jpegFile,
+    //           name: newFileName,
+    //           type: jpegFile.type,
+    //           size: jpegFile.size,
+    //         });
             
-            setCompressingCount(prev => prev - 1);
-          } catch (error) {
-            console.error('Error converting HEIC image:', error);
-            setCompressingCount(prev => prev - 1);
-          }
-        }
-        // Now handle compression for JPEG and PNG
-         else if (file && (file.type === 'image/jpeg' || file.type === 'image/png')) {
-          try {
-            setCompressingCount(prev => prev + 1);
-            setUploadStatus(`Compressing image ${file.name?.toString() || 'unknown'}...`);
+    //         setCompressingCount(prev => prev - 1);
+    //       } catch (error) {
+    //         console.error('Error converting HEIC image:', error);
+    //         setCompressingCount(prev => prev - 1);
+    //       }
+    //     }
+    //     // Now handle compression for JPEG and PNG
+    //     else if (file && (file.type === 'image/jpeg' || file.type === 'image/png')) {
+    //       try {
+    //         setCompressingCount(prev => prev + 1);
+    //         setUploadStatus(`Compressing image ${file.name?.toString() || 'unknown'}...`);
             
-            const options = {
-              maxSizeMB: 0.3,
-              maxWidthOrHeight: 1920,
-              useWebWorker: true,
-              preserveExif: true,
-            };
+    //         const options = {
+    //           maxSizeMB: 0.3,
+    //           maxWidthOrHeight: 1600,
+    //           useWebWorker: true,
+    //           preserveExif: true,
+    //         };
 
-            // Cast to File to ensure compatibility
-            const fileData = file.data as File;
-            const compressedFile = await imageCompression(fileData, options);
-            await new Promise((res) => setTimeout(res, 10));
+    //         // Cast to File to ensure compatibility
+    //         const fileData = file.data as File;
+    //         const compressedFile = await imageCompression(fileData, options);
+    //         await new Promise((res) => setTimeout(res, 10));
             
-            // Update the file with compressed data
-            uppy.setFileState(fileID, {
-              data: compressedFile,
-              size: compressedFile.size,
-              type: compressedFile.type,
-            });
+    //         // Update the file with compressed data
+    //         uppy.setFileState(fileID, {
+    //           data: compressedFile,
+    //           size: compressedFile.size,
+    //           type: compressedFile.type,
+    //         });
             
-            setCompressingCount(prev => prev - 1);
-          } catch (error) {
-            console.error('Error compressing image:', error);
-            setCompressingCount(prev => prev - 1);
-          }
-        }
-      }
-    });
+    //         setCompressingCount(prev => prev - 1);
+    //       } catch (error) {
+    //         console.error('Error compressing image:', error);
+    //         setCompressingCount(prev => prev - 1);
+    //       }
+    //     }
+    //   }));
+
+    //   // Wait for all files to be processed
+    //   await Promise.all(processingPromises);
+    // });
 
     return uppy;
   }, []);

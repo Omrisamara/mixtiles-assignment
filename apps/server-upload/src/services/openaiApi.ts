@@ -220,4 +220,58 @@ export class OpenaiApi {
     
     return results;
   }
+
+  async getRelevantClusters(clusterLabelsMap: Map<number, string>): Promise<number[]> {
+    // Convert map to array of cluster descriptions
+    const clusters = Array.from(clusterLabelsMap.entries()).map(([id, label]) => ({
+      id,
+      label
+    }));
+
+    // Skip if no clusters
+    if (clusters.length === 0) {
+      return [];
+    }
+
+    const clustersText = clusters.map(c => `Cluster ${c.id}: ${c.label}`).join('\n');
+
+    try {
+      const response = await axios.post(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          model: this.CHAT_MODEL,
+          messages: [
+            {
+              role: "system",
+              content: "You are a photo curator AI that helps select meaningful and interesting photo clusters for personalized albums. Select clusters that would create engaging and memorable experiences."
+            },
+            {
+              role: "user",
+              content: `Below are photo cluster labels. Select ONLY the cluster IDs (just the numbers) that would make for interesting and meaningful personal album experiences. Consider factors like events, landmarks, activities, or emotionally significant moments. Return ONLY a comma-separated list of cluster IDs, nothing else.\n\n${clustersText}`
+            }
+          ],
+          max_tokens: 100,
+          temperature: 0.3
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const result = response.data.choices[0].message.content.trim();
+      
+      // Parse the comma-separated response into an array of numbers
+      return result.split(',')
+        .map((id: string) => parseInt(id.trim()))
+        .filter((id: number) => !isNaN(id) && clusterLabelsMap.has(id));
+
+    } catch (error) {
+      console.error('Error selecting relevant clusters:', error);
+      // On error, return all cluster IDs as fallback
+      return Array.from(clusterLabelsMap.keys());
+    }
+  }
 } 
