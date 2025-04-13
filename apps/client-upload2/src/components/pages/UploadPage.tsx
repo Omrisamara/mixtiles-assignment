@@ -33,17 +33,16 @@ export function UploadPage() {
       },
     });
 
-    uppy.use(Compressor);
+    uppy.use(Compressor, {
+      quality: 0.5
+    });
 
     // Use XHRUpload for uploading files
     uppy.use(XHRUpload, {
-      endpoint: 'http://192.168.1.73:4000/api/upload', // Replace with your server endpoint
+      endpoint: 'http://10.0.0.11:4000/api/upload', // Replace with your server endpoint
       formData: true,
       fieldName: 'files',
-      headers: {
-        'X-Custom-Header': 'Custom header value',
-      },
-      bundle: true
+      bundle: true,
     });
 
     // Add a preprocessor for image conversion and compression

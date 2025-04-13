@@ -65,6 +65,15 @@ export class ImageProcessor {
     );
     console.timeEnd('createClusterNames');
 
+    console.log('all clusters');
+    console.log(clusterLabelsMap.keys.length)
+
+    // // Print all cluster descriptions
+    // console.log('Cluster descriptions:');
+    // for (const [clusterId, clusterInfo] of clusterLabelsMap.entries()) {
+    //   console.log(`Cluster ${clusterId}: ${clusterInfo} - ${clusterInfo.description}`);
+    // }
+
     const relevantClusters = await this.openaiApi.getRelevantClusters(clusterLabelsMap);
     console.log('relevantClusters', relevantClusters);
 

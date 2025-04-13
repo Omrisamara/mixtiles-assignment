@@ -2,6 +2,7 @@
   "name": "@mx/server-upload",
   "version": "0.0.1",
   "private": true,
+  "type": "module",
   "scripts": {
     "start:cluster": "cd python-cluster && python app.py",
     "setup:cluster": "cd python-cluster && pip install -r requirements.txt",
@@ -90,11 +91,14 @@
       },
       "docker-run-python": {
         "executor": "nx:run-commands",
-        "options": {  
+        "options": {
           "command": "docker build -t python-server ./python-cluster -f ./python-cluster/Dockerfile && docker run -p 5000:5000 python-server",
           "cwd": "apps/server-upload"
         }
       }
     }
+  },
+  "dependencies": {
+    "@uppy/tus": "^4.2.2"
   }
 }
