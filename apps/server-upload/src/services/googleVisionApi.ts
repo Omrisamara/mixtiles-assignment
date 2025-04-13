@@ -67,8 +67,9 @@ export class GoogleVisionApi {
       },
       features: [
         { type: 'LABEL_DETECTION' as const, maxResults: 10 },
-        { type: 'OBJECT_LOCALIZATION' as const, maxResults: 10 },
-        { type: 'LANDMARK_DETECTION' as const, maxResults: 5 }
+        // TODO: Uncomment these when we have a way to handle the costs
+        // { type: 'OBJECT_LOCALIZATION' as const, maxResults: 10 },
+        // { type: 'LANDMARK_DETECTION' as const, maxResults: 5 }
       ]
     }));
 

@@ -2,15 +2,15 @@ import React, { useState, useCallback, useContext } from 'react';
 import imageCompression from 'browser-image-compression';
 import Uppy from '@uppy/core';
 import { Dashboard } from '@uppy/react';
-import XHRUpload from '@uppy/xhr-upload';
+import Tus from '@uppy/tus';
+import Compressor from '@uppy/compressor';
 import '@uppy/core/dist/style.min.css';
 import '@uppy/dashboard/dist/style.min.css';
 import UploadButton from '../../components/uploadButton';
-import heic2any from 'heic2any';
 import { AppContext } from '../../contexts/AppContext';
 import { useNavigate } from 'react-router-dom';
-import pLimit from 'p-limit';
-import Compressor from '@uppy/compressor';
+import axios from 'axios';
+
 export function UploadPage() {
   const { setNarratives } = useContext(AppContext);
   const navigate = useNavigate();
@@ -19,6 +19,7 @@ export function UploadPage() {
   const [compressingCount, setCompressingCount] = useState(0);
   const [totalFiles, setTotalFiles] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadedFileIds, setUploadedFileIds] = useState<string[]>([]);
 
   // Create a Uppy instance only once with useMemo
   const uppyInstance = React.useMemo(() => {
@@ -26,6 +27,12 @@ export function UploadPage() {
       id: 'uppy',
       autoProceed: true,
       allowMultipleUploadBatches: true,
+      debug: true,
+      logger: {
+        debug: (message: string, ...args: any[]) => console.log(`[Uppy Debug] ${message}`, ...args),
+        warn: (message: string, ...args: any[]) => console.warn(`[Uppy Warning] ${message}`, ...args),
+        error: (message: string, ...args: any[]) => console.error(`[Uppy Error] ${message}`, ...args)
+      },
       restrictions: {
         maxNumberOfFiles: 1000,
         maxFileSize: 10 * 1024 * 1024, // 10MB
@@ -33,96 +40,20 @@ export function UploadPage() {
       },
     });
 
+    // Add compressor plugin to compress images before upload
     uppy.use(Compressor, {
-      quality: 0.5
+      quality: 0.6,
+      limit: 4 // Process max 4 files simultaneously
     });
 
-    // Use XHRUpload for uploading files
-    uppy.use(XHRUpload, {
-      endpoint: 'http://10.0.0.11:4000/api/upload', // Replace with your server endpoint
-      formData: true,
-      fieldName: 'files',
-      bundle: true,
+    // Use TUS plugin for resumable uploads
+    uppy.use(Tus, {
+      endpoint: `http://192.168.1.73:4001/uploads`,
+      chunkSize: 5 * 1024 * 1024, // 5MB chunks
+      retryDelays: [0, 1000, 3000, 5000],
+      limit: 5, // Upload 5 files at a time
+      removeFingerprintOnSuccess: true
     });
-
-    // Add a preprocessor for image conversion and compression
-    // uppy.addPreProcessor(async (fileIDs) => {
-    //   const limit = pLimit(4); // Limit concurrent operations to 4
-      
-    //   // Create an array of promises for parallel processing
-    //   const processingPromises = fileIDs.map(fileID => limit(async () => {
-    //     const file = uppy.getFile(fileID);
-        
-    //     // Handle HEIC conversion first
-    //     if (file && (file.type === 'image/heic' || file.type === 'image/heif' || file.name?.toLowerCase().endsWith('.heic'))) {
-    //       try {
-    //         setCompressingCount(prev => prev + 1);
-    //         setUploadStatus(`Converting HEIC image ${file.name?.toString() || 'unknown'} to JPEG...`);
-            
-    //         // Cast to File to ensure compatibility
-    //         const fileData = file.data as File;
-            
-    //         // Convert HEIC to JPEG
-    //         const jpegBlob = await heic2any({
-    //           blob: fileData,
-    //           toType: 'image/jpeg',
-    //           quality: 0.5
-    //         }) as Blob;
-            
-    //         // Create a new file with JPEG extension
-    //         const newFileName = file.name?.replace(/\.[^/.]+$/, '') + '.jpg';
-    //         const jpegFile = new File([jpegBlob], newFileName, { type: 'image/jpeg' });
-            
-    //         // Update the file with converted data
-    //         uppy.setFileState(fileID, {
-    //           data: jpegFile,
-    //           name: newFileName,
-    //           type: jpegFile.type,
-    //           size: jpegFile.size,
-    //         });
-            
-    //         setCompressingCount(prev => prev - 1);
-    //       } catch (error) {
-    //         console.error('Error converting HEIC image:', error);
-    //         setCompressingCount(prev => prev - 1);
-    //       }
-    //     }
-    //     // Now handle compression for JPEG and PNG
-    //     else if (file && (file.type === 'image/jpeg' || file.type === 'image/png')) {
-    //       try {
-    //         setCompressingCount(prev => prev + 1);
-    //         setUploadStatus(`Compressing image ${file.name?.toString() || 'unknown'}...`);
-            
-    //         const options = {
-    //           maxSizeMB: 0.3,
-    //           maxWidthOrHeight: 1600,
-    //           useWebWorker: true,
-    //           preserveExif: true,
-    //         };
-
-    //         // Cast to File to ensure compatibility
-    //         const fileData = file.data as File;
-    //         const compressedFile = await imageCompression(fileData, options);
-    //         await new Promise((res) => setTimeout(res, 10));
-            
-    //         // Update the file with compressed data
-    //         uppy.setFileState(fileID, {
-    //           data: compressedFile,
-    //           size: compressedFile.size,
-    //           type: compressedFile.type,
-    //         });
-            
-    //         setCompressingCount(prev => prev - 1);
-    //       } catch (error) {
-    //         console.error('Error compressing image:', error);
-    //         setCompressingCount(prev => prev - 1);
-    //       }
-    //     }
-    //   }));
-
-    //   // Wait for all files to be processed
-    //   await Promise.all(processingPromises);
-    // });
 
     return uppy;
   }, []);
@@ -135,6 +66,7 @@ export function UploadPage() {
 
     const uploadStartHandler = () => {
       setIsUploading(true);
+      setUploadedFileIds([]);
     };
 
     const uploadProgressHandler = (_file: unknown, progress: { bytesUploaded: number; bytesTotal: number | null }) => {
@@ -145,22 +77,44 @@ export function UploadPage() {
       }
     };
 
-    const completeHandler = (result: { successful?: Array<unknown>; failed?: Array<unknown>; response?: { body?: any } }) => {
-      setIsUploading(false);
+    const uploadSuccessHandler = (file: any, response: any) => {
+      // Extract the file ID from the TUS upload URL
+      const fileUrl = response.uploadURL;
+      const fileId = fileUrl.split('/').pop();
       
+      if (fileId) {
+        setUploadedFileIds(prev => [...prev, fileId]);
+      }
+    };
+
+    const completeHandler = async (result: { successful?: Array<unknown>; failed?: Array<unknown> }) => {
       if (result && result.successful && result.successful.length > 0) {
-        setUploadStatus(`Upload complete! ${result.successful.length} files uploaded successfully.`);
+        setUploadStatus(`All uploads complete! Finalizing...`);
         
-        console.log(result);
-        // Update narratives with the server response
-        if (result.successful[0] && (result.successful[0] as any).response.body.results) {
-          setNarratives((result.successful[0] as any).response.body.results);
+        try {
+          // Finalize the upload by sending all file IDs to the server
+          const response = await axios.post(`http://192.168.1.73:4000/api/finalize-upload`, {
+            fileIds: uploadedFileIds
+          });
           
-          // Redirect to the FilterPage after a short delay
-          navigate('/filter');
+          if (response.data && response.data.results) {
+            setNarratives(response.data.results);
+            setUploadStatus(`Upload complete! ${result.successful.length} files processed successfully.`);
+            
+            // Redirect to the FilterPage
+            navigate('/filter');
+          } else {
+            setUploadStatus('Error: Invalid server response');
+          }
+        } catch (error) {
+          console.error('Error finalizing upload:', error);
+          setUploadStatus(`Error: Failed to finalize upload`);
+        } finally {
+          setIsUploading(false);
         }
       } else {
-        setUploadStatus('Upload complete!');
+        setUploadStatus('Upload complete, but no files were successfully uploaded.');
+        setIsUploading(false);
       }
     };
 
@@ -173,6 +127,7 @@ export function UploadPage() {
     uppyInstance.on('file-added', fileAddedHandler);
     uppyInstance.on('upload-start', uploadStartHandler);
     uppyInstance.on('upload-progress', uploadProgressHandler);
+    uppyInstance.on('upload-success', uploadSuccessHandler);
     uppyInstance.on('complete', completeHandler);
     uppyInstance.on('error', errorHandler);
 
@@ -181,12 +136,13 @@ export function UploadPage() {
       uppyInstance.off('file-added', fileAddedHandler);
       uppyInstance.off('upload-start', uploadStartHandler);
       uppyInstance.off('upload-progress', uploadProgressHandler);
+      uppyInstance.off('upload-success', uploadSuccessHandler);
       uppyInstance.off('complete', completeHandler);
       uppyInstance.off('error', errorHandler);
       // Cancel all uploads on unmount
       uppyInstance.cancelAll();
     };
-  }, [uppyInstance, setNarratives, navigate]);
+  }, [uppyInstance, setNarratives, navigate, uploadedFileIds]);
 
   const resetUppy = useCallback(() => {
     uppyInstance.cancelAll();
@@ -198,23 +154,31 @@ export function UploadPage() {
     setUploadStatus('');
     setTotalFiles(0);
     setIsUploading(false);
+    setUploadedFileIds([]);
   }, [uppyInstance]);
 
   const handleFilesSelected = (files: File[]) => {
-    // Add each selected file to the Uppy instance
-    files.forEach(file => {
-      try {
-        uppyInstance.addFile({
-          name: file.name,
-          type: file.type,
-          data: file,
-          source: 'local',
-          isRemote: false,
-        });
-      } catch (error) {
-        console.error('Error adding file to Uppy:', error);
-      }
-    });
+    if (files && files.length > 0) {
+      resetUppy(); // Clear any previous uploads
+      
+      // Add files to Uppy
+      files.forEach(file => {
+        try {
+          uppyInstance.addFile({
+            name: file.name,
+            type: file.type,
+            data: file,
+            meta: {
+              name: file.name,
+            },
+          });
+        } catch (error) {
+          console.error('Error adding file:', error);
+        }
+      });
+      
+      // TUS uploading will start automatically due to autoProceed: true
+    }
   };
 
   return (
@@ -297,7 +261,7 @@ export function UploadPage() {
         )}
 
         <div className="mb-6">
-          {/* <Dashboard
+          <Dashboard
             uppy={uppyInstance}
             plugins={['Webcam']}
             metaFields={[
@@ -306,28 +270,20 @@ export function UploadPage() {
             showProgressDetails
             height={450}
             width="100%"
-            note="Images will be compressed automatically before upload"
+            note="Images will be compressed automatically before upload using TUS for resumable uploads"
             proudlyDisplayPoweredByUppy={false}
-            showSelectedFiles={false}
-          /> */}
+            showSelectedFiles={true}
+          />
         </div>
         
-        {/* <div className="flex space-x-4">
-          <button 
-            onClick={() => uppyInstance.upload()}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            disabled={totalFiles === 0 || compressingCount > 0}
-          >
-            Upload {totalFiles} Files
-          </button>
-          
+        <div className="flex space-x-4">
           <button 
             onClick={resetUppy}
             className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
           >
             Reset
           </button>
-        </div> */}
+        </div>
       </div>
 
       {/* Custom loading modal with animation */}

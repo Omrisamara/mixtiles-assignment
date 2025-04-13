@@ -10,6 +10,11 @@ import { ClusterProcessor } from './services/clusterProcessor.js';
 import { serviceAccount } from './gsa.js';
 import dotenv from 'dotenv';
 import { GoogleCloudStorage } from './services/googleCloudStorage.js';
+// Using dynamic imports for ESM modules
+// import { Server } from '@tus/server';
+// import { FileStore } from '@tus/file-store';
+import path from 'path';
+import fs from 'fs';
 
 // Load environment variables
 dotenv.config();
@@ -36,11 +41,129 @@ const imageProcessor = new ImageProcessor(
 
 // Configure CORS to allow requests from the client
 app.use(cors());
+app.use(express.json());
 
 // Use memory storage to avoid saving files to disk
 const upload = multer({ 
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit to match client
+});
+
+// Setup TUS server
+const uploadDir = path.resolve('./uploads/tus');
+// Create directory if it doesn't exist
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Initialize TUS server dynamically
+let tusServer: any = null;
+(async () => {
+  try {
+    const { Server } = await import('@tus/server');
+    const { FileStore } = await import('@tus/file-store');
+    
+    tusServer = new Server({
+      path: 'apps/server-upload/src/uploads',
+      datastore: new FileStore({
+        directory: uploadDir
+      }),
+      respectForwardedHeaders: true,
+      namingFunction: (req) => {
+        // Generate a unique ID for the file
+        return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+      }
+    });
+    
+    console.log('TUS server initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize TUS server:', error);
+  }
+})();
+
+// Handle TUS protocol routes
+app.all('/uploads', (req, res) => {
+  if (tusServer) {
+    console.log('TUS server found');
+    tusServer.handle(req, res);
+  } else {
+    res.status(503).json({ message: 'Upload server is initializing. Please try again shortly.' });
+  }
+});
+
+app.all('/uploads/*', (req, res) => {
+  if (tusServer) {
+    console.log('TUS server found2');
+    tusServer.handle(req, res);
+  } else {
+    res.status(503).json({ message: 'Upload server is initializing. Please try again shortly.' });
+  }
+});
+
+// Create a finalize endpoint to handle uploaded files
+app.post('/api/finalize-upload', async (req, res) => {
+  try {
+    const { fileIds } = req.body;
+    
+    if (!fileIds || !Array.isArray(fileIds) || fileIds.length === 0) {
+      return res.status(400).json({
+        message: 'No file IDs provided'
+      });
+    }
+    
+    console.log(`📥 Finalizing ${fileIds.length} uploaded files`);
+    
+    // Collect all files from storage
+    const files: Express.Multer.File[] = [];
+    for (const fileId of fileIds) {
+      try {
+        const filePath = path.join(uploadDir, fileId);
+        if (fs.existsSync(filePath)) {
+          const fileBuffer = fs.readFileSync(filePath);
+          const fileName = fileId.split('-').pop() || fileId;
+          
+          // Create a structure compatible with Express.Multer.File
+          files.push({
+            fieldname: 'files',
+            originalname: fileName,
+            encoding: '7bit',
+            mimetype: 'image/jpeg', // Assuming these are images
+            destination: uploadDir,
+            filename: fileId,
+            path: filePath,
+            size: fileBuffer.length,
+            buffer: fileBuffer,
+            stream: null as any // Required by type but not used by the processor
+          });
+          
+          console.log(`Processed file: ${fileName}, size: ${(fileBuffer.length / (1024 * 1024)).toFixed(2)} MB`);
+        }
+      } catch (error) {
+        console.error(`Error processing file ${fileId}:`, error);
+      }
+    }
+    
+    if (files.length === 0) {
+      return res.status(400).json({
+        message: 'No valid files found'
+      });
+    }
+    
+    // Process images using the imageProcessor
+    const results = await imageProcessor.processImages(files);
+    
+    // Return successful response with results
+    return res.status(200).json({ 
+      message: 'Files processed successfully', 
+      results,
+    });
+  } catch (error: any) {
+    console.error('Error handling finalize upload:', error);
+    return res.status(500).json({ 
+      message: 'Error processing files',
+      error: error.message 
+    });
+  }
 });
 
 // Handle file uploads from Uppy
@@ -58,18 +181,18 @@ app.post('/api/upload', upload.array('files', 1000), async (req, res) => {
       const results = await imageProcessor.processImages(files);
       
       // Return successful response with results
-      res.status(200).json({ 
+      return res.status(200).json({ 
         message: 'Files processed successfully', 
         results,
       });
     } else {
-      res.status(400).json({
+      return res.status(400).json({
         message: 'No files received',
       });
     }
   } catch (error: any) {
     console.error('Error handling file upload:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       message: 'Error processing files',
       error: error.message 
     });
