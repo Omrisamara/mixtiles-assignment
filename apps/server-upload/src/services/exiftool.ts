@@ -1,4 +1,4 @@
-import { ImageTakenLocation, ImageTakenTime } from '../imageProcessor';
+import { ImageTakenLocation, ImageTakenTime } from '../imageProcessor.js';
 import exifReader from 'exif-reader';
 
 interface ExifImage {

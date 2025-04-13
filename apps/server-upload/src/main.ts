@@ -1,15 +1,15 @@
 import express from 'express';
 import multer from 'multer';
 import cors from 'cors';
-import { ImageProcessor } from './imageProcessor';
-import { GoogleVisionApi } from './services/googleVisionApi';
-import { OpenaiApi } from './services/openaiApi';
-import { Exiftool } from './services/exiftool';
-import { ClusterApi } from './services/clusterApi';
-import { ClusterProcessor } from './services/clusterProcessor';
-import { serviceAccount } from './gsa';
+import { ImageProcessor } from './imageProcessor.js';
+import { GoogleVisionApi } from './services/googleVisionApi.js';
+import { OpenaiApi } from './services/openaiApi.js';
+import { Exiftool } from './services/exiftool.js';
+import { ClusterApi } from './services/clusterApi.js';
+import { ClusterProcessor } from './services/clusterProcessor.js';
+import { serviceAccount } from './gsa.js';
 import dotenv from 'dotenv';
-import { GoogleCloudStorage } from './services/googleCloudStorage';
+import { GoogleCloudStorage } from './services/googleCloudStorage.js';
 
 // Load environment variables
 dotenv.config();

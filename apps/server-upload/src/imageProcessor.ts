@@ -1,9 +1,9 @@
-import { GoogleVisionApi } from './services/googleVisionApi';
-import { OpenaiApi } from './services/openaiApi';
-import { Exiftool } from './services/exiftool';
-import { ClusterApi } from './services/clusterApi';
-import { ClusterProcessor } from './services/clusterProcessor';
-import { GoogleCloudStorage } from './services/googleCloudStorage';
+import { GoogleVisionApi } from './services/googleVisionApi.js';
+import { OpenaiApi } from './services/openaiApi.js';
+import { Exiftool } from './services/exiftool.js';
+import { ClusterApi } from './services/clusterApi.js';
+import { ClusterProcessor } from './services/clusterProcessor.js';
+import { GoogleCloudStorage } from './services/googleCloudStorage.js';
 
 export type FileClusterMapping = { [filename: string]: string };
 
@@ -81,7 +81,7 @@ export class ImageProcessor {
     const relevantFiles = files.filter(file => {
       // Find which cluster this file belongs to
       const fileMapping = clusteredDescriptions.fileClusterMapping.find(
-        mapping => mapping.fileId === file.originalname
+        (mapping: { fileId: string; cluster: number }) => mapping.fileId === file.originalname
       );
       
       const isOutlier = clusteredDescriptions.outliers.includes(file.filename);
@@ -100,7 +100,7 @@ export class ImageProcessor {
     console.time('createFullClustersData');
     // Filter cluster mappings to only include files from relevant clusters
     const relevantClusterMappings = clusteredDescriptions.fileClusterMapping.filter(
-      mapping => relevantClusters.includes(mapping.cluster)
+      (mapping: { cluster: number }) => relevantClusters.includes(mapping.cluster)
     );
 
     const clustersData = this.clusterProcessor.createFullClustersData(

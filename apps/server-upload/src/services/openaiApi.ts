@@ -1,7 +1,7 @@
-import { Embedding, ImageVisionDescription } from '../imageProcessor';
+import { Embedding, ImageVisionDescription } from '../imageProcessor.js';
 import { encoding_for_model } from '@dqbd/tiktoken';
 import axios from 'axios';
-import { ClusteringResult } from './clusterApi';
+import { ClusteringResult } from './clusterApi.js';
 
 // Define the cluster description type for internal use
 interface ClusterGroup {
@@ -111,7 +111,7 @@ export class OpenaiApi {
     // Group files by cluster ID
     const clusterGroups = new Map<number, string[]>();
     
-    clusteringResult.fileClusterMapping.forEach(mapping => {
+    clusteringResult.fileClusterMapping.forEach((mapping: { cluster: number; fileId: string }) => {
       const clusterId = mapping.cluster;
       const filename = mapping.fileId;
       

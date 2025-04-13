@@ -1,4 +1,4 @@
-import { ImageVisionDescription } from '../imageProcessor';
+import { ImageVisionDescription } from '../imageProcessor.js';
 import { ImageAnnotatorClient } from '@google-cloud/vision';
 import * as fs from 'fs';
 import * as path from 'path';

@@ -1,5 +1,5 @@
-import { ClusterData, ImageTakenLocation, ImageTakenTime, ImageVisionDescription } from '../imageProcessor';
-import { FileClusterMapping } from './clusterApi';
+import { ClusterData, ImageTakenLocation, ImageTakenTime, ImageVisionDescription } from '../imageProcessor.js';
+import { FileClusterMapping } from './clusterApi.js';
 
 export class ClusterProcessor {
   createFullClustersData(

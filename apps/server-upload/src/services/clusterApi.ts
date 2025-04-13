@@ -1,4 +1,4 @@
-import { Embedding, ImageTakenLocation, ImageTakenTime } from '../imageProcessor';
+import { Embedding, ImageTakenLocation, ImageTakenTime } from '../imageProcessor.js';
 import axios from 'axios';
 
 export interface FileClusterMapping {
