@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useContext } from 'react';
 import imageCompression from 'browser-image-compression';
 import Uppy from '@uppy/core';
+import XHRUpload from '@uppy/xhr-upload';
 import { Dashboard } from '@uppy/react';
 import Tus from '@uppy/tus';
 import Compressor from '@uppy/compressor';
@@ -47,13 +48,14 @@ export function UploadPage() {
     });
 
     // Use TUS plugin for resumable uploads
-    uppy.use(Tus, {
-      endpoint: `http://192.168.1.73:4001/uploads`,
-      chunkSize: 5 * 1024 * 1024, // 5MB chunks
-      retryDelays: [0, 1000, 3000, 5000],
-      limit: 5, // Upload 5 files at a time
-      removeFingerprintOnSuccess: true
+
+    uppy.use(XHRUpload, {
+      endpoint: import.meta.env.VITE_UPLOAD_ENDPOINT || `http://192.168.1.73:4000/api/upload`,
     });
+
+    // uppy.use(Tus, {
+    //   endpoint: import.meta.env.VITE_UPLOAD_ENDPOINT || `http://192.168.1.73:4000/uploads`,
+    // });
 
     return uppy;
   }, []);
@@ -159,7 +161,7 @@ export function UploadPage() {
 
   const handleFilesSelected = (files: File[]) => {
     if (files && files.length > 0) {
-      resetUppy(); // Clear any previous uploads
+      // resetUppy(); // Clear any previous uploads
       
       // Add files to Uppy
       files.forEach(file => {
@@ -222,7 +224,7 @@ export function UploadPage() {
           <div className="relative">
             <div className="absolute inset-0 bg-indigo-100 rounded-full transform -rotate-6 scale-110 opacity-50"></div>
             <div className="relative z-10">
-              <UploadButton onFilesSelected={handleFilesSelected} />
+              {/* <UploadButton onFilesSelected={handleFilesSelected} /> */}
             </div>
           </div>
         </div>
@@ -263,7 +265,7 @@ export function UploadPage() {
         <div className="mb-6">
           <Dashboard
             uppy={uppyInstance}
-            plugins={['Webcam']}
+            // plugins={['Webcam']}
             metaFields={[
               { id: 'name', name: 'Name', placeholder: 'File name' }
             ]}
