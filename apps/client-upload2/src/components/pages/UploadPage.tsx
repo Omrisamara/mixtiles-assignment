@@ -1,7 +1,5 @@
 import React, { useState, useCallback, useContext } from 'react';
-import imageCompression from 'browser-image-compression';
 import Uppy from '@uppy/core';
-import XHRUpload from '@uppy/xhr-upload';
 import { Dashboard } from '@uppy/react';
 import Tus from '@uppy/tus';
 import Compressor from '@uppy/compressor';
@@ -20,7 +18,6 @@ export function UploadPage() {
   const [compressingCount, setCompressingCount] = useState(0);
   const [totalFiles, setTotalFiles] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadedFileIds, setUploadedFileIds] = useState<string[]>([]);
 
   // Create a Uppy instance only once with useMemo
   const uppyInstance = React.useMemo(() => {
@@ -41,19 +38,8 @@ export function UploadPage() {
       limit: 4 // Process max 4 files simultaneously
     });
 
-    // Use TUS plugin for resumable uploads
-    // uppy.use(XHRUpload, {
-    //   endpoint: 'http://192.168.1.73:4000/uploads', // Replace with your server endpoint
-    //   formData: true,
-    //   fieldName: 'files',
-    //   headers: {
-    //     'X-Custom-Header': 'Custom header value',
-    //   },
-    //   bundle: true
-    // });
-
     uppy.use(Tus, {
-      endpoint: import.meta.env.VITE_UPLOAD_ENDPOINT || `http://192.168.1.73:4000/uploads`,
+      endpoint: `${import.meta.env.VITE_UPLOAD_ENDPOINT}/uploads`,
       retryDelays: [0, 1000, 3000, 5000],
       chunkSize: 1 * 1024 * 1024, // 5MB
       removeFingerprintOnSuccess: true,
@@ -71,8 +57,6 @@ export function UploadPage() {
 
     const uploadStartHandler = () => {
       setIsUploading(true);
-      console.log('uploadStartHandler');
-      // setUploadedFileIds([]);
     };
 
     const uploadProgressHandler = (_file: unknown, progress: { bytesUploaded: number; bytesTotal: number | null }) => {
@@ -83,26 +67,14 @@ export function UploadPage() {
       }
     };
 
-    const uploadSuccessHandler = (file: any, response: any) => {
-      // Extract the file ID from the TUS upload URL
-      const fileUrl = response.uploadURL;
-      const fileId = fileUrl.split('/').pop();
-      
-      console.log('settingfileId', fileId);
-      if (fileId) {
-        setUploadedFileIds(prev => [...prev, fileId]);
-      }
-    };
-
     const completeHandler = async (result: { successful?: Array<unknown>; failed?: Array<unknown> }) => {
       if (result && result.successful && result.successful.length > 0) {
-        console.log('result', result);
         setUploadStatus(`All uploads complete! Finalizing...`);
         
         try {
           const fileIds = result.successful.map((file: any) => file.uploadURL.split('/').pop());
           // Finalize the upload by sending all file IDs to the server
-          const response = await axios.post(`http://192.168.1.73:4000/api/finalize-upload`, {
+          const response = await axios.post(`${import.meta.env.VITE_UPLOAD_ENDPOINT}/api/finalize-upload`, {
             fileIds: fileIds
           });
           
@@ -151,7 +123,7 @@ export function UploadPage() {
       // Cancel all uploads on unmount
       // uppyInstance.cancelAll();
     };
-  }, [uppyInstance, setNarratives, navigate, uploadedFileIds]);
+  }, [uppyInstance, setNarratives, navigate]);
 
   const resetUppy = useCallback(() => {
     uppyInstance.cancelAll();
@@ -163,7 +135,6 @@ export function UploadPage() {
     setUploadStatus('');
     setTotalFiles(0);
     setIsUploading(false);
-    setUploadedFileIds([]);
   }, [uppyInstance]);
 
   const handleFilesSelected = (files: File[]) => {
@@ -231,7 +202,7 @@ export function UploadPage() {
           <div className="relative">
             <div className="absolute inset-0 bg-indigo-100 rounded-full transform -rotate-6 scale-110 opacity-50"></div>
             <div className="relative z-10">
-              {/* <UploadButton onFilesSelected={handleFilesSelected} /> */}
+              <UploadButton onFilesSelected={handleFilesSelected} />
             </div>
           </div>
         </div>
@@ -270,7 +241,7 @@ export function UploadPage() {
         )}
 
         <div className="mb-6">
-          <Dashboard
+          {/* <Dashboard
             uppy={uppyInstance}
             // plugins={['Webcam']}
             metaFields={[
@@ -282,16 +253,7 @@ export function UploadPage() {
             note="Images will be compressed automatically before upload using TUS for resumable uploads"
             proudlyDisplayPoweredByUppy={false}
             showSelectedFiles={true}
-          />
-        </div>
-        
-        <div className="flex space-x-4">
-          <button 
-            onClick={resetUppy}
-            className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
-          >
-            Reset
-          </button>
+          /> */}
         </div>
       </div>
 

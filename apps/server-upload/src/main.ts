@@ -10,9 +10,6 @@ import { ClusterProcessor } from './services/clusterProcessor.js';
 import { serviceAccount } from './gsa.js';
 import dotenv from 'dotenv';
 import { GoogleCloudStorage } from './services/googleCloudStorage.js';
-// Using dynamic imports for ESM modules
-// import { Server } from '@tus/server';
-// import { FileStore } from '@tus/file-store';
 import path from 'path';
 import fs from 'fs';
 
@@ -59,14 +56,10 @@ process.on('uncaughtException', (err: any) => {
   if (err.code === 'ECONNRESET') {
     console.warn('Global ECONNRESET — ignored');
   } else {
-    console.error('UNCAUGHT EXCEPTION 🔥', err);
+    console.error('UNCAUGHT EXCEPTION', err);
     process.exit(1); // optional: remove this if you want to survive crashes
   }
 });
-
-// process.on('unhandledRejection', (reason, promise) => {
-//   console.error('UNHANDLED PROMISE REJECTION 🔥', reason);
-// });
 
 // Initialize TUS server dynamically
 let tusServer: any = null;
@@ -81,10 +74,6 @@ let tusServer: any = null;
         directory: uploadDir
       }),
       respectForwardedHeaders: true,
-      // namingFunction: (req) => {
-      //   // Generate a unique ID for the file
-      //   return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
-      // }
     });
     
     console.log('TUS server initialized successfully');

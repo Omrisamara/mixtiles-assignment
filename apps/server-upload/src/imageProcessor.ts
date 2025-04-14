@@ -85,7 +85,6 @@ export class ImageProcessor {
       );
       
       const isOutlier = clusteredDescriptions.outliers.includes(file.filename);
-      const isDuplicate = clusteredDescriptions.duplicates.includes(file.filename);
       const isInRelevantCluster = fileMapping && relevantClusters.includes(fileMapping.cluster);
       
       return !isOutlier && isInRelevantCluster;
@@ -97,7 +96,6 @@ export class ImageProcessor {
 
     // require('fs').writeFileSync('./debug-files.json', JSON.stringify(files, null, 2));
 
-    console.time('createFullClustersData');
     // Filter cluster mappings to only include files from relevant clusters
     const relevantClusterMappings = clusteredDescriptions.fileClusterMapping.filter(
       (mapping: { cluster: number }) => relevantClusters.includes(mapping.cluster)
@@ -111,7 +109,6 @@ export class ImageProcessor {
       imagesTakenLocation,
       imagesVisionDescriptions
     );
-    console.timeEnd('createFullClustersData');
     
     return clustersData;
   }
