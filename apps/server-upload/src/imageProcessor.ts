@@ -4,6 +4,7 @@ import { Exiftool } from './services/exiftool.js';
 import { ClusterApi } from './services/clusterApi.js';
 import { ClusterProcessor } from './services/clusterProcessor.js';
 import { GoogleCloudStorage } from './services/googleCloudStorage.js';
+import { filterFiles } from './utils/fileUtils';
 
 export type FileClusterMapping = { [filename: string]: string };
 
@@ -46,17 +47,15 @@ export class ImageProcessor {
     const descriptionsEmbddings = await this.openaiApi.getEmbddings(imagesVisionDescriptions);
     console.timeEnd('getEmbddings');
 
-    console.time('getImagesTakenTimeAndLocation');
     const [imagesTakenTime, imagesTakenLocation] = await this.exiftool.getImagesTakenTimeAndLocation(files);
-    console.timeEnd('getImagesTakenTimeAndLocation');
 
-    console.time('cluster');
+    console.time('cluster descriptions');
     const clusteredDescriptions = await this.clusterApi.cluster(
       descriptionsEmbddings,
       imagesTakenTime,
       imagesTakenLocation
     );
-    console.timeEnd('cluster');
+    console.timeEnd('cluster descriptions');
 
     console.time('createClusterNames');
     const clusterLabelsMap = await this.openaiApi.createClusterNames(
@@ -77,24 +76,11 @@ export class ImageProcessor {
     const relevantClusters = await this.openaiApi.getRelevantClusters(clusterLabelsMap);
     console.log('relevantClusters', relevantClusters);
 
-    // Filter out files that are either outliers or not in relevant clusters
-    const relevantFiles = files.filter(file => {
-      // Find which cluster this file belongs to
-      const fileMapping = clusteredDescriptions.fileClusterMapping.find(
-        (mapping: { fileId: string; cluster: number }) => mapping.fileId === file.originalname
-      );
-      
-      const isOutlier = clusteredDescriptions.outliers.includes(file.filename);
-      const isInRelevantCluster = fileMapping && relevantClusters.includes(fileMapping.cluster);
-      
-      return !isOutlier && isInRelevantCluster;
-    });
+    const relevantFiles = filterFiles(files, clusteredDescriptions, relevantClusters);
     
     console.time('saveImages');
     const fileNameToUrlMap = await this.googleCloudStorage.saveImages(relevantFiles);
     console.timeEnd('saveImages');
-
-    // require('fs').writeFileSync('./debug-files.json', JSON.stringify(files, null, 2));
 
     // Filter cluster mappings to only include files from relevant clusters
     const relevantClusterMappings = clusteredDescriptions.fileClusterMapping.filter(

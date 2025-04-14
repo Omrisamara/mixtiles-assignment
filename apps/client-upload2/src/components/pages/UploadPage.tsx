@@ -13,7 +13,6 @@ import axios from 'axios';
 export function UploadPage() {
   const { setNarratives } = useContext(AppContext);
   const navigate = useNavigate();
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState('');
   const [compressingCount, setCompressingCount] = useState(0);
   const [totalFiles, setTotalFiles] = useState(0);
@@ -59,14 +58,6 @@ export function UploadPage() {
       setIsUploading(true);
     };
 
-    const uploadProgressHandler = (_file: unknown, progress: { bytesUploaded: number; bytesTotal: number | null }) => {
-      if (progress && progress.bytesTotal) {
-        const progressPercentage = Math.floor((progress.bytesUploaded / progress.bytesTotal) * 100);
-        setUploadProgress(progressPercentage);
-        setUploadStatus(`Uploading: ${progressPercentage}%`);
-      }
-    };
-
     const completeHandler = async (result: { successful?: Array<unknown>; failed?: Array<unknown> }) => {
       if (result && result.successful && result.successful.length > 0) {
         setUploadStatus(`All uploads complete! Finalizing...`);
@@ -107,7 +98,6 @@ export function UploadPage() {
     // Add event listeners
     uppyInstance.on('file-added', fileAddedHandler);
     uppyInstance.on('upload-start', uploadStartHandler);
-    uppyInstance.on('upload-progress', uploadProgressHandler);
     // uppyInstance.on('upload-success', uploadSuccessHandler);
     uppyInstance.on('complete', completeHandler);
     uppyInstance.on('error', errorHandler);
@@ -116,7 +106,6 @@ export function UploadPage() {
     return () => {
       uppyInstance.off('file-added', fileAddedHandler);
       uppyInstance.off('upload-start', uploadStartHandler);
-      uppyInstance.off('upload-progress', uploadProgressHandler);
       // uppyInstance.off('upload-success', uploadSuccessHandler);
       uppyInstance.off('complete', completeHandler);
       uppyInstance.off('error', errorHandler);
@@ -131,7 +120,6 @@ export function UploadPage() {
     const files = uppyInstance.getFiles();
     files.forEach(file => uppyInstance.removeFile(file.id));
     
-    setUploadProgress(0);
     setUploadStatus('');
     setTotalFiles(0);
     setIsUploading(false);
@@ -216,19 +204,6 @@ export function UploadPage() {
           </div>
         )}
         
-        {/* Visual indicator for upload progress */}
-        {uploadProgress > 0 && uploadProgress < 100 && (
-          <div className="mb-6">
-            <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300 ease-out" 
-                style={{ width: `${uploadProgress}%` }}
-              ></div>
-            </div>
-            <p className="text-sm text-gray-500 mt-2 text-center">{uploadProgress}% complete</p>
-          </div>
-        )}
-        
         {uploadStatus && (
           <div className="mb-6 p-4 bg-white bg-opacity-70 backdrop-blur-sm border border-indigo-100 rounded-lg shadow-sm">
             <div className="flex items-center">
@@ -269,7 +244,6 @@ export function UploadPage() {
               <h3 className="text-xl font-bold text-gray-800 mb-3">
                 {compressingCount > 0 ? "Processing Images" : "Uploading Images"}
               </h3>
-              {/* TODO: remove before production */}
               <p className="text-gray-600 text-center mb-2">
                 {uploadStatus}
               </p>
@@ -278,17 +252,6 @@ export function UploadPage() {
                   ? "Converting and optimizing your photos for the best experience." 
                   : "Uploading your photos to create your personalized album."}
               </p>
-              {isUploading && uploadProgress > 0 && (
-                <div className="w-full mt-2 mb-4">
-                  <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300 ease-out" 
-                      style={{ width: `${uploadProgress}%` }}
-                    ></div>
-                  </div>
-                  <p className="text-sm text-indigo-600 mt-1 text-center">{uploadProgress}% complete</p>
-                </div>
-              )}
               <div className="flex space-x-1 mt-2">
                 <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
                 <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
