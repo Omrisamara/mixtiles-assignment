@@ -32,13 +32,6 @@ export function NarrativesPage() {
   const { narratives } = useContext(AppContext);
   const navigate = useNavigate();
 
-  // Function to get a random image URL from the narrative's photos
-  const getRandomImageUrl = (photos: any[]) => {
-    if (!photos || photos.length === 0) return '';
-    const randomIndex = Math.floor(Math.random() * photos.length);
-    return photos[randomIndex].url;
-  };
-
   const handleNarrativeClick = (clusterId: string) => {
     navigate(`/narratives/${clusterId}`);
   };
@@ -56,7 +49,7 @@ export function NarrativesPage() {
             <NarrativeCard 
               key={narrative.clusterId}
               label={narrative.label.replace(/['"]/g, '')}
-              backgroundUrl={getRandomImageUrl(narrative.photos)}
+              backgroundUrl={narrative.photos[0].url}
               clusterId={narrative.clusterId}
               onClick={handleNarrativeClick}
             />
