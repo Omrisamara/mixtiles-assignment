@@ -28,12 +28,6 @@ export function UploadPage() {
       id: 'uppy',
       autoProceed: true,
       allowMultipleUploadBatches: true,
-      debug: true,
-      logger: {
-        debug: (message: string, ...args: any[]) => console.log(`[Uppy Debug] ${message}`, ...args),
-        warn: (message: string, ...args: any[]) => console.warn(`[Uppy Warning] ${message}`, ...args),
-        error: (message: string, ...args: any[]) => console.error(`[Uppy Error] ${message}`, ...args)
-      },
       restrictions: {
         maxNumberOfFiles: 1000,
         maxFileSize: 10 * 1024 * 1024, // 10MB
@@ -48,14 +42,23 @@ export function UploadPage() {
     });
 
     // Use TUS plugin for resumable uploads
-
-    uppy.use(XHRUpload, {
-      endpoint: import.meta.env.VITE_UPLOAD_ENDPOINT || `http://192.168.1.73:4000/api/upload`,
-    });
-
-    // uppy.use(Tus, {
-    //   endpoint: import.meta.env.VITE_UPLOAD_ENDPOINT || `http://192.168.1.73:4000/uploads`,
+    // uppy.use(XHRUpload, {
+    //   endpoint: 'http://192.168.1.73:4000/uploads', // Replace with your server endpoint
+    //   formData: true,
+    //   fieldName: 'files',
+    //   headers: {
+    //     'X-Custom-Header': 'Custom header value',
+    //   },
+    //   bundle: true
     // });
+
+    uppy.use(Tus, {
+      endpoint: import.meta.env.VITE_UPLOAD_ENDPOINT || `http://192.168.1.73:4000/uploads`,
+      retryDelays: [0, 1000, 3000, 5000],
+      chunkSize: 1 * 1024 * 1024, // 5MB
+      removeFingerprintOnSuccess: true,
+      limit: 5
+    });
 
     return uppy;
   }, []);
@@ -68,7 +71,8 @@ export function UploadPage() {
 
     const uploadStartHandler = () => {
       setIsUploading(true);
-      setUploadedFileIds([]);
+      console.log('uploadStartHandler');
+      // setUploadedFileIds([]);
     };
 
     const uploadProgressHandler = (_file: unknown, progress: { bytesUploaded: number; bytesTotal: number | null }) => {
@@ -84,6 +88,7 @@ export function UploadPage() {
       const fileUrl = response.uploadURL;
       const fileId = fileUrl.split('/').pop();
       
+      console.log('settingfileId', fileId);
       if (fileId) {
         setUploadedFileIds(prev => [...prev, fileId]);
       }
@@ -91,12 +96,14 @@ export function UploadPage() {
 
     const completeHandler = async (result: { successful?: Array<unknown>; failed?: Array<unknown> }) => {
       if (result && result.successful && result.successful.length > 0) {
+        console.log('result', result);
         setUploadStatus(`All uploads complete! Finalizing...`);
         
         try {
+          const fileIds = result.successful.map((file: any) => file.uploadURL.split('/').pop());
           // Finalize the upload by sending all file IDs to the server
           const response = await axios.post(`http://192.168.1.73:4000/api/finalize-upload`, {
-            fileIds: uploadedFileIds
+            fileIds: fileIds
           });
           
           if (response.data && response.data.results) {
@@ -129,7 +136,7 @@ export function UploadPage() {
     uppyInstance.on('file-added', fileAddedHandler);
     uppyInstance.on('upload-start', uploadStartHandler);
     uppyInstance.on('upload-progress', uploadProgressHandler);
-    uppyInstance.on('upload-success', uploadSuccessHandler);
+    // uppyInstance.on('upload-success', uploadSuccessHandler);
     uppyInstance.on('complete', completeHandler);
     uppyInstance.on('error', errorHandler);
 
@@ -138,11 +145,11 @@ export function UploadPage() {
       uppyInstance.off('file-added', fileAddedHandler);
       uppyInstance.off('upload-start', uploadStartHandler);
       uppyInstance.off('upload-progress', uploadProgressHandler);
-      uppyInstance.off('upload-success', uploadSuccessHandler);
+      // uppyInstance.off('upload-success', uploadSuccessHandler);
       uppyInstance.off('complete', completeHandler);
       uppyInstance.off('error', errorHandler);
       // Cancel all uploads on unmount
-      uppyInstance.cancelAll();
+      // uppyInstance.cancelAll();
     };
   }, [uppyInstance, setNarratives, navigate, uploadedFileIds]);
 
@@ -161,7 +168,7 @@ export function UploadPage() {
 
   const handleFilesSelected = (files: File[]) => {
     if (files && files.length > 0) {
-      // resetUppy(); // Clear any previous uploads
+      resetUppy(); // Clear any previous uploads
       
       // Add files to Uppy
       files.forEach(file => {
@@ -334,3 +341,5 @@ export function UploadPage() {
 }
 
 export default UploadPage; 
+
+

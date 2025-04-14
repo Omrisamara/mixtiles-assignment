@@ -66,7 +66,7 @@ export class ImageProcessor {
     console.timeEnd('createClusterNames');
 
     console.log('all clusters');
-    console.log(clusterLabelsMap.keys.length)
+    console.log(Array.from(clusterLabelsMap.keys()).length)
 
     // // Print all cluster descriptions
     // console.log('Cluster descriptions:');

@@ -41,7 +41,6 @@ const imageProcessor = new ImageProcessor(
 
 // Configure CORS to allow requests from the client
 app.use(cors());
-app.use(express.json());
 
 // Use memory storage to avoid saving files to disk
 const upload = multer({ 
@@ -50,11 +49,24 @@ const upload = multer({
 });
 
 // Setup TUS server
-const uploadDir = path.resolve('./uploads/tus');
+const uploadDir = path.resolve('apps/server-upload/src/uploads');
 // Create directory if it doesn't exist
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
+
+process.on('uncaughtException', (err: any) => {
+  if (err.code === 'ECONNRESET') {
+    console.warn('Global ECONNRESET — ignored');
+  } else {
+    console.error('UNCAUGHT EXCEPTION 🔥', err);
+    process.exit(1); // optional: remove this if you want to survive crashes
+  }
+});
+
+// process.on('unhandledRejection', (reason, promise) => {
+//   console.error('UNHANDLED PROMISE REJECTION 🔥', reason);
+// });
 
 // Initialize TUS server dynamically
 let tusServer: any = null;
@@ -64,15 +76,15 @@ let tusServer: any = null;
     const { FileStore } = await import('@tus/file-store');
     
     tusServer = new Server({
-      path: 'apps/server-upload/src/uploads',
+      path: '/uploads',
       datastore: new FileStore({
         directory: uploadDir
       }),
       respectForwardedHeaders: true,
-      namingFunction: (req) => {
-        // Generate a unique ID for the file
-        return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
-      }
+      // namingFunction: (req) => {
+      //   // Generate a unique ID for the file
+      //   return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+      // }
     });
     
     console.log('TUS server initialized successfully');
@@ -83,25 +95,43 @@ let tusServer: any = null;
 
 // Handle TUS protocol routes
 app.all('/uploads', (req, res) => {
-  if (tusServer) {
-    console.log('TUS server found');
-    tusServer.handle(req, res);
+  try {
+    if (tusServer) {
+      console.log('TUS server found');
+      tusServer.handle(req, res);
   } else {
-    res.status(503).json({ message: 'Upload server is initializing. Please try again shortly.' });
+      res.status(503).json({ message: 'Upload server is initializing. Please try again shortly.' });
+    }
+  } catch (error: any) {
+    if (error.code === "ECONNRESET") {
+      console.warn('ECONNRESET received');
+    } else {
+      console.error('Failed to handle TUS request:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
   }
 });
 
 app.all('/uploads/*', (req, res) => {
-  if (tusServer) {
-    console.log('TUS server found2');
-    tusServer.handle(req, res);
+  try {
+    if (tusServer) {
+      console.log('TUS server found2');
+      tusServer.handle(req, res);
   } else {
-    res.status(503).json({ message: 'Upload server is initializing. Please try again shortly.' });
+      res.status(503).json({ message: 'Upload server is initializing. Please try again shortly.' });
+    }
+  } catch (error: any) {
+    if (error.code === "ECONNRESET") {
+      console.warn('ECONNRESET received');
+    } else {
+      console.error('Failed to handle TUS request:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
   }
 });
 
 // Create a finalize endpoint to handle uploaded files
-app.post('/api/finalize-upload', async (req, res) => {
+app.post('/api/finalize-upload', express.json(), async (req, res) => {
   try {
     const { fileIds } = req.body;
     
@@ -150,6 +180,7 @@ app.post('/api/finalize-upload', async (req, res) => {
     }
     
     // Process images using the imageProcessor
+    // const results: any[] = [];
     const results = await imageProcessor.processImages(files);
     
     // Return successful response with results
@@ -204,6 +235,8 @@ app.get('/api/status', (req, res) => {
   res.json({ status: 'Server is running' });
 });
 
-app.listen(PORT, () => {
+const server =app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
+
+server.maxConnections = 1000;
