@@ -47,3 +47,4 @@ vitest.config.*.timestamp*
 debug-files.json
 
 apps/server-upload/src/uploads/*
+.env
