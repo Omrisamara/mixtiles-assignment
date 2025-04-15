@@ -5,7 +5,7 @@ import Tus from '@uppy/tus';
 import Compressor from '@uppy/compressor';
 import '@uppy/core/dist/style.min.css';
 import '@uppy/dashboard/dist/style.min.css';
-import UploadButton from '../../components/uploadButton';
+import UploadButton from '../common/uploadButton';
 import { AppContext } from '../../contexts/AppContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
