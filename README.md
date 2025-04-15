@@ -1,2 +1,2 @@
-Engineering Assignment for mixtiles.
-Made by Omri samara.
+- Engineering Assignment for mixtiles.
+- Made by Omri samara.
