@@ -30,7 +30,10 @@ export function UploadPage() {
       },
     });
 
-    // Add compressor plugin to compress images before upload
+    // IMPRORTANT: compressor will only work up to ~600 images on mobile browser environment.
+    // If you want to upload more, you can remove the compressor plugin.
+    // This is also coupled with the Google Vision API batch size, because of google vision 40MB limit. (5 vs 16)
+    // --
     // uppy.use(Compressor, {
     //   quality: 0.5,
     //   limit: 4 // Process max 4 files simultaneously
@@ -112,10 +115,8 @@ export function UploadPage() {
       // uppyInstance.off('upload-success', uploadSuccessHandler);
       uppyInstance.off('complete', completeHandler);
       uppyInstance.off('error', errorHandler);
-      // Cancel all uploads on unmount
-      // uppyInstance.cancelAll();
     };
-  }, [uppyInstance, setNarratives, navigate]);
+  }, [uppyInstance, isUploading, setNarratives, navigate, ]);
 
   const resetUppy = useCallback(() => {
     uppyInstance.cancelAll();
