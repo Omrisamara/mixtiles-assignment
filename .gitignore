@@ -48,3 +48,5 @@ debug-files.json
 
 apps/server-upload/src/uploads/*
 .env
+
+gsa.ts
