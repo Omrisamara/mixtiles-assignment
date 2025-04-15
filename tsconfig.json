@@ -7,7 +7,7 @@
       "path": "./apps/server-upload"
     },
     {
-      "path": "./apps/client-upload2"
+      "path": "./apps/client-upload"
     }
   ]
 }

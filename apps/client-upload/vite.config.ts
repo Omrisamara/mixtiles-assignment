@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(() => ({
   root: __dirname,
-  cacheDir: '../../node_modules/.vite/apps/client-upload2',
+  cacheDir: '../../node_modules/.vite/apps/client-upload',
   server: {
     port: 4200,
     host: '0.0.0.0',
