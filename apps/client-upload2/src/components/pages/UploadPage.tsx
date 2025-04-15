@@ -15,7 +15,6 @@ export function UploadPage() {
   const navigate = useNavigate();
   const [uploadStatus, setUploadStatus] = useState('');
   const [compressingCount, setCompressingCount] = useState(0);
-  const [totalFiles, setTotalFiles] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
 
   // Create a Uppy instance only once with useMemo
@@ -32,10 +31,10 @@ export function UploadPage() {
     });
 
     // Add compressor plugin to compress images before upload
-    uppy.use(Compressor, {
-      quality: 0.6,
-      limit: 4 // Process max 4 files simultaneously
-    });
+    // uppy.use(Compressor, {
+    //   quality: 0.5,
+    //   limit: 4 // Process max 4 files simultaneously
+    // });
 
     uppy.use(Tus, {
       endpoint: `${import.meta.env.VITE_UPLOAD_ENDPOINT}/uploads`,
@@ -51,16 +50,20 @@ export function UploadPage() {
   // Set up event listeners
   React.useEffect(() => {
     const fileAddedHandler = () => {
-      setTotalFiles(uppyInstance.getFiles().length);
+      if(!isUploading) {
+        setIsUploading(true);
+        setUploadStatus('Setting up files for upload...');
+      }
     };
 
     const uploadStartHandler = () => {
+      setUploadStatus('Uploading images...');
       setIsUploading(true);
     };
 
     const completeHandler = async (result: { successful?: Array<unknown>; failed?: Array<unknown> }) => {
       if (result && result.successful && result.successful.length > 0) {
-        setUploadStatus(`All uploads complete! Finalizing...`);
+        setUploadStatus(`Uploads complete! Crearting the narratives...`);
         
         try {
           const fileIds = result.successful.map((file: any) => file.uploadURL.split('/').pop());
@@ -121,7 +124,7 @@ export function UploadPage() {
     files.forEach(file => uppyInstance.removeFile(file.id));
     
     setUploadStatus('');
-    setTotalFiles(0);
+    // setTotalFiles(0);
     setIsUploading(false);
   }, [uppyInstance]);
 
@@ -194,15 +197,6 @@ export function UploadPage() {
             </div>
           </div>
         </div>
-
-        {totalFiles > 0 && (
-          <div className="mb-8 text-center">
-            <div className="inline-flex items-center bg-indigo-50 px-4 py-2 rounded-full">
-              <span className="inline-block w-3 h-3 bg-indigo-500 rounded-full mr-2 animate-pulse"></span>
-              <span className="text-indigo-700 font-medium">{totalFiles} files selected</span>
-            </div>
-          </div>
-        )}
         
         {uploadStatus && (
           <div className="mb-6 p-4 bg-white bg-opacity-70 backdrop-blur-sm border border-indigo-100 rounded-lg shadow-sm">
@@ -216,7 +210,7 @@ export function UploadPage() {
         )}
 
         <div className="mb-6">
-          {/* <Dashboard
+          <Dashboard
             uppy={uppyInstance}
             // plugins={['Webcam']}
             metaFields={[
@@ -228,7 +222,7 @@ export function UploadPage() {
             note="Images will be compressed automatically before upload using TUS for resumable uploads"
             proudlyDisplayPoweredByUppy={false}
             showSelectedFiles={true}
-          /> */}
+          />
         </div>
       </div>
 

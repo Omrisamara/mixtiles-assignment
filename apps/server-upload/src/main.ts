@@ -86,7 +86,6 @@ let tusServer: any = null;
 app.all('/uploads', (req, res) => {
   try {
     if (tusServer) {
-      console.log('TUS server found');
       tusServer.handle(req, res);
   } else {
       res.status(503).json({ message: 'Upload server is initializing. Please try again shortly.' });
@@ -104,7 +103,6 @@ app.all('/uploads', (req, res) => {
 app.all('/uploads/*', (req, res) => {
   try {
     if (tusServer) {
-      console.log('TUS server found2');
       tusServer.handle(req, res);
   } else {
       res.status(503).json({ message: 'Upload server is initializing. Please try again shortly.' });

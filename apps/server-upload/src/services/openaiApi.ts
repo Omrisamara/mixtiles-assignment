@@ -234,6 +234,7 @@ export class OpenaiApi {
     }
 
     const clustersText = clusters.map(c => `Cluster ${c.id}: ${c.label}`).join('\n');
+    console.log("All Clusters text: ", clustersText)
 
     try {
       const response = await axios.post(
@@ -247,7 +248,8 @@ export class OpenaiApi {
             },
             {
               role: "user",
-              content: `Below are photo cluster labels. Select ONLY the cluster IDs (just the numbers) that would make for interesting and meaningful personal album experiences. Consider factors like events, landmarks, activities, or emotionally significant moments. Return ONLY a comma-separated list of cluster IDs, nothing else.\n\n${clustersText}`
+              content: `Below are photo cluster labels. Select ONLY the cluster IDs (just the numbers) that would make for interesting and meaningful personal album experiences. Return ONLY a comma-separated list of cluster IDs, nothing else.\n\n${clustersText}`
+              // content: `Below are photo cluster labels. Select ONLY the cluster IDs (just the numbers) that would make for interesting and meaningful personal album experiences. Consider factors like events, landmarks, activities, or emotionally significant moments. Return ONLY a comma-separated list of cluster IDs, nothing else.\n\n${clustersText}`
             }
           ],
           max_tokens: 100,

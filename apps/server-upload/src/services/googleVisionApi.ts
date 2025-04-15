@@ -5,7 +5,7 @@ import * as path from 'path';
 
 export class GoogleVisionApi {
   private client: ImageAnnotatorClient;
-  private batchSize = 16; // Google Vision API allows up to 16 images per request
+  private batchSize = 5; // Google Vision API allows up to 16 images per request
 
   constructor(private serviceAccountJson: object) {
     // Initialize the client using the service account JSON directly
